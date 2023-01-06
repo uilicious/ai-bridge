@@ -1,0 +1,28 @@
+{
+  "name": "ai-bridge",
+  "version": "1.0.0",
+  "description": "AI connector library, which helps simplify API usage, and provide out of the box caching.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.uilicious-dev.com:ai-labs/ai-bridge.git"
+  },
+  "author": "eugene@uilicious.com",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@js-util/config-object-merge": "^1.0.4",
+    "gpt3-tokenizer": "^1.1.4",
+    "json-stable-stringify": "^1.0.2",
+    "node-fetch": "^2.6.7",
+    "node-jsonl": "^0.1.0",
+    "proper-lockfile": "^4.1.2"
+  },
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^10.2.0"
+  }
+}
