@@ -14,8 +14,8 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@js-util/config-object-merge": "^1.0.4",
+    "fast-json-stable-stringify": "^2.1.0",
     "gpt3-tokenizer": "^1.1.4",
-    "json-stable-stringify": "^1.0.2",
     "node-fetch": "^2.6.7",
     "node-jsonl": "^0.1.0",
     "proper-lockfile": "^4.1.2"

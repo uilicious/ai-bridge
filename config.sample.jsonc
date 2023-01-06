@@ -55,7 +55,11 @@
 		"mongoDB": {
 			"enable": false,
 			"url": "mongodb+srv://sample-hostname:27017/?maxPoolSize=20&w=majority"
-		}
+		},
+
+		// Individually enable prompt or embedding caching
+		"promptCache": true,
+		"embeddingCache": true
 	},
 
 	// AI bridge settings

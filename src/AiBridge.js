@@ -1,5 +1,6 @@
 // Dependencies
 const configObjectMerge = require("@js-util/config-object-merge");
+const LayerCache = require("./cache/LayerCache");
 const defaultConfig = require("./core/defaultConfig")
 
 /**
@@ -16,6 +17,7 @@ class AiBridge {
         // Merge the provided config with default values
         this.config = configObjectMerge(defaultConfig, inConfig, true);
 
-        
+        // Get the layer cache
+        this.layerCache = new LayerCache(config.cache);
     }
 }
