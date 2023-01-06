@@ -7,11 +7,11 @@ It also provide some very minor QOL enhancments to the API
 
 ## Cache Options
 - Local jsonl cache dir
-- MongoDB connection
+- (@TODO) MongoDB connection
 
 ## Provider support
 - openAI
-- forefront (embedding not supported)
+- (@TODO) forefront (embedding not supported)
 
 ## Why should you be caching your AI response?
 
