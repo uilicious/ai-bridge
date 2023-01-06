@@ -19,6 +19,7 @@ module.exports = {
 		}
 	},
 
+	
 	// Custom model mapping,
 	// This is used to divert operations on a model to model level
 	//

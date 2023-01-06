@@ -12,6 +12,7 @@
 
 		// For forefront.ai, you will need to provide both an API key
 		// and a URL mapping for each model
+		// @TODO : NOT SUPPORTED YET
 		"forefront.ai": {
 			"apikey": "your-apikey",
 			"models": {
@@ -20,9 +21,13 @@
 		},
 
 		// Custom openai drop in API provider
+		// @TODO : NOT SUPPORTED YET
 		"customAPI": { "type":"openai", "url":"https://api.openai.com/v1/", "apikey":"your-apikey" }
 	},
 
+	//
+	// @TODO : NOT SUPPORTED YET
+	//
 	// Custom model mapping,
 	// This is used to divert operations on a model to model level
 	//
@@ -52,6 +57,7 @@
 		},
 
 		// MongoDB connection, to store and query cached completion request
+		// @TODO : NOT SUPPORTED YET
 		"mongoDB": {
 			"enable": false,
 			"url": "mongodb+srv://sample-hostname:27017/?maxPoolSize=20&w=majority"
@@ -113,10 +119,6 @@
 			// range from 0-1
 			"top_p": 1,
 
-			// Number of completion to create
-			// generally recommended to do multiple calls instead
-			"n": 1,
-
 			// Enable / Disable streaming, callback function should be
 			// set if stream is enabled
 			"stream": false,
@@ -140,6 +142,9 @@
 
 			// This is ignored on cache reads, but is sent on prompt request
 			"user": null,
+
+			// Number of completion to create, this parameter is NOT supported
+			"n": 1,
 
 			// This setting is ignored, as we do not cache the log probabilities
 			"logprobs": null

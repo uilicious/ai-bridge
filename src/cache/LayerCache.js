@@ -15,7 +15,6 @@ const cleanPromptKeys = [
 	"stop",
 	"temperature",
 	"top_p",
-	"n",
 	"presence_penalty",
 	"frequency_penalty",
 	"best_of",
