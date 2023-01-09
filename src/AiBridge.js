@@ -13,11 +13,12 @@ class AiBridge {
      * @param {Object} inConfig 
      */
     constructor(inConfig) {
-
         // Merge the provided config with default values
         this.config = configObjectMerge(defaultConfig, inConfig, true);
 
         // Get the layer cache
         this.layerCache = new LayerCache(config.cache);
     }
+
+    
 }

@@ -105,8 +105,8 @@
 			"max_tokens": null,
 
 			// Default prompt and stop token
-			"prompt": "<|endoftext|>",
-			"stop": "<|endoftext|>",
+			// "prompt": "<|custom-stop-token|>",
+			// "stop": "<|custom-stop-token|>",
 
 			// Default temperature to use, we set to 0
 			// by default, as this makes all prompts highly cachable.

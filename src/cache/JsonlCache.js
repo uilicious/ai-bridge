@@ -11,10 +11,23 @@ const jsonStringify = require('fast-json-stable-stringify');
 // Utility function
 //------------------------------------------------------------------
 
-// Given the type and cacheObj, get the full cacheFilePath
-// relative from the baseDir
+/**
+ * Given the type and cacheObj, get the full cacheFilePath relative from the baseDir
+ */
 function getCacheFilePath(type, cacheObj) {
 	return path.join( cacheObj.promptOpt.model, type, cacheObj.cacheGrp, cacheObj.hash.slice(0,2), cacheObj.hash.slice(2,4), cacheObj.hash+".jsonl" )
+}
+
+/**
+ * Silently setup the dir path, this is used as a means of optimizing folder creation between a get and set
+ * Without having an unhandled promise error
+ */
+async function silentlySetupDir(dirPath) {
+	try {
+		fs.promises.mkdir( dirPath, { recursive: true } );
+	} catch(e) {
+		// Does nothing
+	}
 }
 
 //------------------------------------------------------------------
@@ -23,6 +36,8 @@ function getCacheFilePath(type, cacheObj) {
 
 /**
  * # JsonlCache context
+ * 
+ * NOTE: This is not designed to be used directly, and is meant to be used with LayerCache instance
  * 
  * Provides a jsonl based cache, this is used primarily to faciltate local caching, which can be easily stored and committed into a git repo.
  * Allowing the local cache to be shared across multiple team-members, or be used in the build process. While avoiding a remote DB loockup.
@@ -40,7 +55,7 @@ function getCacheFilePath(type, cacheObj) {
  *   ./{completion|embedding}/
  *      ./{operation-group-name}/
  *          ./{prompt-hash-prefix1}/{prompt-hash-prefix2}/
- *              ./{prompt-hash-suffix}.jsonl
+ *              ./{prompt-hash}.jsonl
  */
  class JsonlCache {
 
@@ -81,7 +96,7 @@ function getCacheFilePath(type, cacheObj) {
 					}
 
 					// Reject non matching prompt
-					if( value.prompt != prompt ) {
+					if( value.prompt != cacheObj.prompt ) {
 						continue;
 					}
 
@@ -94,7 +109,7 @@ function getCacheFilePath(type, cacheObj) {
 		} else {
 			// Preamptively create the parent dir, without awaiting
 			// this helps speed up addCache in subsequent call
-			fs.promises.mkdir( path.dirname(filePath), { recursive: true } );
+			silentlySetupDir( path.dirname(filePath) );
 		}
 
 		// End is reached, nothign found, return null
@@ -124,7 +139,7 @@ function getCacheFilePath(type, cacheObj) {
 
 			// Prepare the jsonl obj
 			let jsonLineObj = { 
-				prompt:prompt, 
+				prompt:cacheObj.prompt, 
 				completion:completion,
 				opt: cacheObj.cleanOpt
 			};
@@ -140,5 +155,90 @@ function getCacheFilePath(type, cacheObj) {
 		}
 	}
 
+	/**
+	 * Given the prompt details, search and get the completion record in cache.
+	 * Get has been optimized to be performed without file locking.
+	 */
+	async getCacheEmbedding(cacheObj) {
+		// Get the full filepath
+		let filePath = cacheObj._jsonlFilePath;
+		if( filePath == null ) {
+			filePath = cacheObj._jsonlFilePath = path.resolve(this.baseDir, getCacheFilePath("embedding", cacheObj));
+		}
+		
+		// Scan the file, if it exists
+		// this is done without file locking, as a performance speed up
+		// for cache hit, at the cost of higher latency on cache miss
+		//
+		// additionally because it can cause read/write contention - it can fail.
+		// as such any error here is ignored.
+		if( await fileExist(fullPath) ) {
+			try {
+				// Scan the various jsonl lines
+				const rl = jsonl.readlines(fullPath);
+				while(true) {
+					const {value, done} = await rl.next();
+					if(done) break;
+
+
+					// Reject non matching prompt
+					if( value.prompt != prompt ) {
+						continue;
+					}
+
+					// Return the completion
+					return value.embedding;
+				}
+			} catch(e) {
+				// exception is ignored
+			}
+		} else {
+			// Preamptively create the parent dir, without awaiting
+			// this helps speed up addCache in subsequent call
+			silentlySetupDir( path.dirname(filePath) );
+		}
+
+		// End is reached, nothign found, return null
+		return null;
+	}
+
+	/**
+	 * Given the prompt details, add the completion record into cache
+	 */
+	async addCacheEmbedding(cacheObj, embedding) {
+		// Get the full filepath
+		let filePath = cacheObj._jsonlFilePath;
+		if( filePath == null ) {
+			filePath = cacheObj._jsonlFilePath = path.resolve(this.baseDir, getCacheFilePath("embedding", cacheObj));
+		}
+		
+		// Get the write lock
+		let lockRelease = await lockfile.lock(filePath, { realpath:false });
+		
+		// Perform actions within a lock
+		try {
+			// Scan the file, as race conditions are possible
+			if( await this.getCacheCompletion(cacheObj) != null ) {
+				// Abort write, as record already exists
+				return;
+			}
+
+			// Prepare the jsonl obj
+			let jsonLineObj = { 
+				prompt:cacheObj.prompt, 
+				embedding:embedding,
+				opt: cacheObj.cleanOpt
+			};
+
+			// Write it
+			await fs.promises.appendFile(fullPath, jsonStringify(jsonLineObj)+"\n", { encoding:"utf8" });
+
+			// And return
+			return
+		} finally {
+			// Release the lock
+			await lockRelease();
+		}
+	}
 }
 module.exports = JsonlCache;
