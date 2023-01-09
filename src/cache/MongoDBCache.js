@@ -100,7 +100,10 @@ function getCacheCollectionName(type, cacheObj) {
 			},
 			{
 				$set: {
-					completion:completion
+					// Store the completion
+					completion:completion,
+					// Cache groups are used to organize records for analytics
+					cacheGrp:cacheObj.cacheGrp
 				}
 			},
 			{
@@ -124,7 +127,11 @@ function getCacheCollectionName(type, cacheObj) {
 
 		// Search for the record
 		let record = await collection.findOne({
-			prompt: cacheObj.prompt
+			hash: cacheObj.hash,
+			prompt: cacheObj.prompt,
+
+			// Excluded from search, as options kind dun matter here
+			// opt: cacheObj.cleanOpt
 		});
 
 		// And return
@@ -148,12 +155,16 @@ function getCacheCollectionName(type, cacheObj) {
 		// Upsert the record
 		await collection.updateOne(
 			{
+				hash: cacheObj.hash,
 				prompt: cacheObj.prompt,
 				opt: cacheObj.cleanOpt
 			},
 			{
 				$set: {
-					embedding: embedding
+					// Store the embedding
+					embedding: embedding,
+					// Cache groups are used to organize records for analytics
+					cacheGrp:cacheObj.cacheGrp
 				}
 			},
 			{

@@ -63,13 +63,15 @@ const getEmbedding = require("./openai/getEmbedding");
 		let opt = Object.assign({}, this.config.default.completions, promptOpts);
 		opt.prompt = prompt;
 
+		// Parse the prompt, and compute its token count
+		let promptTokenObj = tokenizer.encode( prompt );
+
 		// Normalize "max_tokens" auto
 		if( opt.max_tokens == "auto" || opt.max_tokens == null ) {
 			let totalTokens = opt.total_tokens || 4090;
-			let tokenObj = tokenizer.encode( prompt );
-			opt.max_tokens = totalTokens - tokenObj.bpe.length;
+			opt.max_tokens = totalTokens - promptTokenObj.bpe.length;
 			if( opt.max_tokens <= 50 ) {
-				throw `Prompt is larger or nearly equal to total token count (${tokenObj.bpe.length}/${totalTokens})`;
+				throw `Prompt is larger or nearly equal to total token count (${promptTokenObj.bpe.length}/${totalTokens})`;
 			}
 		}
 

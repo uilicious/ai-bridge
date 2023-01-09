@@ -29,7 +29,7 @@ const cleanPromptKeys = [
 function getCleanPromptOpt(promptOpt) {
 	let cleanOpt = {};
 	for(const key of cleanPromptKeys) {
-		if( promptOpt[key] ) {
+		if( promptOpt[key] != null ) {
 			cleanOpt[key] = promptOpt[key];
 		}
 	}
