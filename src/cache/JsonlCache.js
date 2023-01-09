@@ -59,10 +59,18 @@ async function silentlySetupDir(dirPath) {
  */
  class JsonlCache {
 
-
-	// Setup with the base dir
+	/**
+	 * Setup with the base dir
+	 */
 	constructor(jsonlDir) {
 		this.baseDir = path.resolve(jsonlDir);
+	}
+
+	/** 
+	 * Does any async based setup, which might be required
+	 */
+	async setup() {
+		await silentlySetupDir(this.baseDir)
 	}
 
 	/**

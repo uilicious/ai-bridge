@@ -4,6 +4,7 @@
 const jsonStringify = require('fast-json-stable-stringify');
 const crypto = require('crypto');
 const JsonlCache = require('./JsonlCache');
+const MongoDBCache = require('./MongoDBCache');
 
 //------------------------------------------------------------------
 // Utility function
@@ -35,8 +36,11 @@ function getCleanPromptOpt(promptOpt) {
 	return promptOpt;
 }
 
+/**
+ * Given the prompt, prompt opt, and cacheGrp - build the cacheObj
+ * TempKey is excluded, as its NOT used by embeddings
+ */
 function getCacheObj(prompt, promptOpt, cacheGrp) {
-
 	// Get the clean prompt options
 	let cleanOpt = getCleanPromptOpt(promptOpt);
 
@@ -81,7 +85,7 @@ class LayerCache {
 			this.jsonlCache = new JsonlCache(inConfig.localJsonlDir.path);
 		}
 		if( inConfig.mongoDB.enable == true ) {
-			// @TODO
+			this.mongoCache = new MongoDBCache(inConfig.mongoDB.url);
 		}
 
 		// Get the cache settings
@@ -119,6 +123,20 @@ class LayerCache {
 			}
 		}
 
+		// Get from remote mongo cache
+		if( this.mongoCache ) {
+			cacheRes = await this.mongoCache.getCacheCompletion(cacheObj);
+			if( cacheRes ) {
+				// Transfer to local if possible
+				if( this.jsonlCache ) {
+					this.jsonlCache.addCacheCompletion(cacheObj, cacheRes);
+				}
+
+				// Return
+				return cacheRes;
+			}
+		}
+
 		// Nothing found, return null
 		return null;
 	}
@@ -146,11 +164,15 @@ class LayerCache {
 		// Cache result array (to await at the end)
 		let cacheResArr = [];
 
-		// Try to add to local cache
+		// Try to add to various cache
 		if( this.jsonlCache ) {
 			cacheResArr.push( this.jsonlCache.addCacheCompletion(cacheObj, prompt) );
 		}
+		if( this.mongoCache ) {
+			cacheResArr.push( this.mongoCache.addCacheCompletion(cacheObj, prompt) );
+		}
 
+		// Await for all
 		await Promise.all(cacheResArr);
 
 		// Add to cache completed
@@ -185,6 +207,20 @@ class LayerCache {
 			}
 		}
 
+		// Get from remote mongo cache
+		if( this.mongoCache ) {
+			cacheRes = await this.mongoCache.addCacheEmbedding(cacheObj);
+			if( cacheRes ) {
+				// Transfer to local if possible
+				if( this.jsonlCache ) {
+					this.jsonlCache.addCacheCompletion(cacheObj, cacheRes);
+				}
+
+				// Return
+				return cacheRes;
+			}
+		}
+
 		// Nothing found, return null
 		return null;
 	}
@@ -210,11 +246,15 @@ class LayerCache {
 		// Cache result array (to await at the end)
 		let cacheResArr = [];
 
-		// Try to add to local cache
+		// Try to add to various cache
 		if( this.jsonlCache ) {
 			cacheResArr.push( this.jsonlCache.addCacheEmbedding(cacheObj, embedding) );
 		}
+		if( this.mongoCache ) {
+			cacheResArr.push( this.mongoCache.addCacheEmbedding(cacheObj, embedding) );
+		}
 
+		// Await for all
 		await Promise.all(cacheResArr);
 
 		// Add to cache completed
