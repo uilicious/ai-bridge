@@ -89,7 +89,14 @@ const getEmbedding = require("./openai/getEmbedding");
 		let cacheRes = await this.layerCache.getCacheCompletion(prompt, opt, cacheGrp, tempKey);
 		if (cacheRes) {
 			streamListener(cacheRes);
-			return cacheRes;
+			return {
+				completion: cacheRes,
+				token: {
+					prompt: promptTokenObj.bpe.length,
+					completion: (tokenizer.encode( cacheRes )).bpe.length,
+					cache: true
+				}
+			};
 		}
 		
 		// Fallback, get from the openAI API, without caching
@@ -99,7 +106,14 @@ const getEmbedding = require("./openai/getEmbedding");
 		await this.layerCache.addCacheCompletion(prompt, completionRes, opt, cacheGrp, tempKey);
 
 		// Return full completion
-		return completionRes;
+		return {
+			completion: completionRes,
+			token: {
+				prompt: promptTokenObj.bpe.length,
+				completion: (tokenizer.encode( completionRes )).bpe.length,
+				cache: false
+			}
+		};
 	}
 
 	/**
@@ -116,7 +130,13 @@ const getEmbedding = require("./openai/getEmbedding");
 		// Get from the cache
 		let cacheRes = await this.layerCache.getCacheEmbedding(prompt, embeddingOpt, cacheGrp);
 		if (cacheRes) {
-			return cacheRes;
+			return {
+				embedding: cacheRes,
+				token: {
+					prompt: (tokenizer.encode( prompt )).bpe.length,
+					cache: true
+				}
+			};
 		}
 
 		// Get the openai embedding
@@ -126,7 +146,13 @@ const getEmbedding = require("./openai/getEmbedding");
 		await this.layerCache.addCacheEmbedding(prompt, embeddingRes, opt, cacheGrp);
 
 		// And return the result
-		return embeddingRes;
+		return {
+			embedding: embeddingRes,
+			token: {
+				prompt: (tokenizer.encode( embeddingRes )).bpe.length,
+				cache: false
+			}
+		};
 	}
 }
 

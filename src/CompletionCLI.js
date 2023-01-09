@@ -26,9 +26,10 @@ if( require.main === module ) {
 
 		// Get the completion
 		const resp = await bridge.getCompletion(reqPrompt);
-		console.log(resp);
+		console.log(resp.completion);
+		console.log(resp.token);
 
-        // Exit, because of the hanging mongodb connection
+        // Exit, because of the hanging mongodb connections
         process.exit();
 	})();
 } else {
