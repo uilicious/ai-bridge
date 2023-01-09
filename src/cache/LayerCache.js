@@ -184,17 +184,17 @@ class LayerCache {
 	 * Else return null (no valid result)
 	 * 
 	 * @param {String} prompt to use
-	 * @param {Object} promptOpt options to use
+	 * @param {Object} embeddingOpt options to use
 	 * @param {String} cacheGrp to use for caching
 	 */
-	 async getCacheEmbedding(prompt, promptOpt, cacheGrp = "default") {
+	 async getCacheEmbedding(prompt, embeddingOpt, cacheGrp = "default") {
 		// Skip, if disabled
 		if( !this._embeddingCache_enable ) {
 			return;
 		}
 
 		// Cache object to use (with tempKey)
-		let cacheObj = getCacheObj(prompt, promptOpt, cacheGrp);
+		let cacheObj = getCacheObj(prompt, embeddingOpt, cacheGrp);
 
 		// Cache result
 		let cacheRes = null;
@@ -231,17 +231,17 @@ class LayerCache {
 	 * 
 	 * @param {String} prompt to use
 	 * @param {*} embedding to store
-	 * @param {Object} promptOpt options to use
+	 * @param {Object} embeddingOpt options to use
 	 * @param {String} cacheGrp to use for caching
 	 */
-	 async addCacheEmbedding(prompt, embedding, promptOpt, cacheGrp = "default") {
+	 async addCacheEmbedding(prompt, embedding, embeddingOpt, cacheGrp = "default") {
 		// Skip, if disabled
 		if( !this._embeddingCache_enable ) {
 			return;
 		}
 
 		// Cache object to use (with tempKey)
-		let cacheObj = getCacheObj(prompt, promptOpt, cacheGrp);
+		let cacheObj = getCacheObj(prompt, embeddingOpt, cacheGrp);
 
 		// Cache result array (to await at the end)
 		let cacheResArr = [];

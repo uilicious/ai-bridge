@@ -26,7 +26,7 @@ const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
  * 
  * @return {Sring | Object} completion string, if rawApi == false (default), else return the raw API JSON response
  */
-async function getCompletion(
+async function getEmbedding(
     openai_key, inConfig, 
     completionURL = 'https://api.openai.com/v1/embeddings'
 ) {
@@ -88,4 +88,4 @@ async function getCompletion(
 }
 
 // Export the module
-module.exports = getCompletion;
+module.exports = getEmbedding;
