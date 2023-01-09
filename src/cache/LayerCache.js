@@ -66,7 +66,7 @@ function getCacheObj(prompt, promptOpt, cacheGrp) {
  * Given the string input, get and return the md5 hash
  */
 function getHash(str) {
-	return crypto.createHash("md5").update(data, "binary").digest("hex");
+	return crypto.createHash("md5").update(str, "binary").digest("hex");
 }
 
 //------------------------------------------------------------------
@@ -80,7 +80,6 @@ function getHash(str) {
 class LayerCache {
 
 	constructor(inConfig) {
-		
 		if( inConfig.localJsonlDir.enable == true ) {
 			this.jsonlCache = new JsonlCache(inConfig.localJsonlDir.path);
 		}
@@ -91,6 +90,15 @@ class LayerCache {
 		// Get the cache settings
 		this._promptCache_enable = inConfig.promptCache || false;
 		this._embeddingCache_enable = inConfig.embeddingCache || false;
+	}
+
+	async setup() {
+		if( this.jsonlCache ) {
+			await this.jsonlCache.setup();
+		}
+		if( this.mongoCache ) {
+			await this.mongoCache.setup();
+		}
 	}
 
 	/**
@@ -166,10 +174,10 @@ class LayerCache {
 
 		// Try to add to various cache
 		if( this.jsonlCache ) {
-			cacheResArr.push( this.jsonlCache.addCacheCompletion(cacheObj, prompt) );
+			cacheResArr.push( this.jsonlCache.addCacheCompletion(cacheObj, completion) );
 		}
 		if( this.mongoCache ) {
-			cacheResArr.push( this.mongoCache.addCacheCompletion(cacheObj, prompt) );
+			cacheResArr.push( this.mongoCache.addCacheCompletion(cacheObj, completion) );
 		}
 
 		// Await for all

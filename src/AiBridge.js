@@ -25,10 +25,22 @@ const getEmbedding = require("./openai/getEmbedding");
 		this.config = configObjectMerge(defaultConfig, inConfig, true);
 
 		// Get the layer cache
-		this.layerCache = new LayerCache(config.cache);
+		this.layerCache = new LayerCache(this.config.cache);
 
 		// Get the openai key 
-		this._openai_key = config.provider.openai;
+		this._openai_key = this.config.provider.openai;
+		if( this._openai_key == null || this._openai_key == "" ) {
+			throw "Missing valid openai key"
+		}
+	}
+
+	/**
+	 * Perform any async setup, as required
+	 */
+	async setup() {
+		if( this.layerCache ) {
+			await this.layerCache.setup();
+		}
 	}
 
 	/**
@@ -63,7 +75,7 @@ const getEmbedding = require("./openai/getEmbedding");
 
 		// Generate the temp key, in accordence to the tempreture setting
 		if( tempKey < 0 ) {
-			tempRange = parseFloat(opt.temperature) * parseFloat(this.config.temperatureKeyMultiplier);
+			let tempRange = parseFloat(opt.temperature) * parseFloat(this.config.temperatureKeyMultiplier);
 			if( Math.floor(tempRange) <= 0 ) {
 				tempKey = 0;
 			} else {
@@ -104,7 +116,6 @@ const getEmbedding = require("./openai/getEmbedding");
 		if (cacheRes) {
 			return cacheRes;
 		}
-
 
 		// Get the openai embedding
 		let embeddingRes = await getEmbedding(this._openai_key, opt);

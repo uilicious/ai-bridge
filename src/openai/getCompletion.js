@@ -78,6 +78,15 @@ async function getCompletion(
 		}
 	}
 
+	// Clean out null values, as openAI does not like it (even if it is by default?)
+	for( const key of Object.keys(reqJson) ) {
+		if( reqJson[key] === null ) {
+			delete reqJson[key];
+		}
+	}
+	// Clean out unhandled props
+	delete reqJson.total_tokens;
+
 	// The return data to use
 	let respJson = null;
 	let respErr = null;

@@ -38,6 +38,14 @@ async function getEmbedding(
 	// Join it together
 	let reqJson = Object.assign({}, defaultConfig, inConfig);
 
+	// Clean out null values, as openAI does not like it (even if it is by default?)
+	for( const key of Object.keys(reqJson) ) {
+		if( reqJson[key] === null ) {
+			delete reqJson[key];
+		}
+	}
+    //
+
     // Non streaming request handling
     //----------------------------------
     for(let tries=0; tries < 2; ++tries) {

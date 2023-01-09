@@ -57,7 +57,6 @@
 		},
 
 		// MongoDB connection, to store and query cached completion request
-		// @TODO : NOT SUPPORTED YET
 		"mongoDB": {
 			"enable": false,
 			"url": "mongodb+srv://sample-hostname:27017/?maxPoolSize=20&w=majority"

@@ -46,7 +46,11 @@ module.exports = {
 		"mongoDB": {
 			"enable": false,
 			"url": null
-		}
+		},
+
+		// Enable caching by default
+		"promptCache": true,
+		"embeddingCache": true
 	},
 
 	// AI bridge settings

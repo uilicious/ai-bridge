@@ -6,6 +6,7 @@ const path = require("path")
 const jsonl = require("node-jsonl")
 const lockfile = require('proper-lockfile')
 const jsonStringify = require('fast-json-stable-stringify');
+const fileExist = require("../util/fileExist");
 
 //------------------------------------------------------------------
 // Utility function
@@ -63,7 +64,7 @@ async function silentlySetupDir(dirPath) {
 	 * Setup with the base dir
 	 */
 	constructor(jsonlDir) {
-		this.baseDir = path.resolve(jsonlDir);
+		this.baseDir = path.resolve(process.cwd(), jsonlDir);
 	}
 
 	/** 
@@ -90,10 +91,10 @@ async function silentlySetupDir(dirPath) {
 		//
 		// additionally because it can cause read/write contention - it can fail.
 		// as such any error here is ignored.
-		if( await fileExist(fullPath) ) {
+		if( await fileExist(filePath) ) {
 			try {
 				// Scan the various jsonl lines
-				const rl = jsonl.readlines(fullPath);
+				const rl = jsonl.readlines(filePath);
 				while(true) {
 					const {value, done} = await rl.next();
 					if(done) break;
@@ -153,7 +154,7 @@ async function silentlySetupDir(dirPath) {
 			};
 
 			// Write it
-			await fs.promises.appendFile(fullPath, jsonStringify(jsonLineObj)+"\n", { encoding:"utf8" });
+			await fs.promises.appendFile(filePath, jsonStringify(jsonLineObj)+"\n", { encoding:"utf8" });
 
 			// And return
 			return
@@ -180,10 +181,10 @@ async function silentlySetupDir(dirPath) {
 		//
 		// additionally because it can cause read/write contention - it can fail.
 		// as such any error here is ignored.
-		if( await fileExist(fullPath) ) {
+		if( await fileExist(filePath) ) {
 			try {
 				// Scan the various jsonl lines
-				const rl = jsonl.readlines(fullPath);
+				const rl = jsonl.readlines(filePath);
 				while(true) {
 					const {value, done} = await rl.next();
 					if(done) break;
@@ -239,7 +240,7 @@ async function silentlySetupDir(dirPath) {
 			};
 
 			// Write it
-			await fs.promises.appendFile(fullPath, jsonStringify(jsonLineObj)+"\n", { encoding:"utf8" });
+			await fs.promises.appendFile(filePath, jsonStringify(jsonLineObj)+"\n", { encoding:"utf8" });
 
 			// And return
 			return
