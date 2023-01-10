@@ -2,6 +2,7 @@
 const configObjectMerge = require("@js-util/config-object-merge");
 const LayerCache = require("./cache/LayerCache");
 const defaultConfig = require("./core/defaultConfig");
+const PromiseQueue = require("promise-queue")
 
 // Initialize the tokenizer
 const GPT3Tokenizer = require('gpt3-tokenizer').default;
@@ -32,6 +33,9 @@ const getEmbedding = require("./openai/getEmbedding");
 		if( this._openai_key == null || this._openai_key == "" ) {
 			throw "Missing valid openai key"
 		}
+
+		// Setup the promise queue
+		this._pQueue = new PromiseQueue(this.config.providerRateLimit);
 	}
 
 	/**
@@ -100,7 +104,9 @@ const getEmbedding = require("./openai/getEmbedding");
 		}
 		
 		// Fallback, get from the openAI API, without caching
-		let completionRes = await getCompletion(this._openai_key, opt, streamListener);
+		let completionRes = this._pQueue.add(async function() {
+			return await getCompletion(this._openai_key, opt, streamListener);
+		});
 
 		// Add to cache
 		await this.layerCache.addCacheCompletion(prompt, completionRes, opt, cacheGrp, tempKey);
@@ -140,7 +146,9 @@ const getEmbedding = require("./openai/getEmbedding");
 		}
 
 		// Get the openai embedding
-		let embeddingRes = await getEmbedding(this._openai_key, opt);
+		let embeddingRes = this._pQueue.add(async function() {
+			return await getEmbedding(this._openai_key, opt);
+		});
 
 		// Add the result into cache
 		await this.layerCache.addCacheEmbedding(prompt, embeddingRes, opt, cacheGrp);

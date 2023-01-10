@@ -19,7 +19,13 @@ module.exports = {
 		}
 	},
 
-	
+	// Concurrent provider access
+	// use to reate limit API request
+	//
+	// Is not used to rate limit cache checks
+	//----------------------------------------
+	"providerRateLimit": 1,
+
 	// Custom model mapping,
 	// This is used to divert operations on a model to model level
 	//
