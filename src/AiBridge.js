@@ -48,6 +48,16 @@ const getEmbedding = require("./openai/getEmbedding");
 	}
 
 	/**
+	 * Given the prompt string, get the token count - not actually cached
+	 * (Should I?)
+	 * 
+	 * @param {String} prompt 
+	 */
+	async getTokenCount(prompt) {
+		return (tokenizer.encode( prompt )).bpe.length;
+	}
+
+	/**
 	 * Get the completion of the input string
 	 * 
 	 * @param {String} prompt to use
