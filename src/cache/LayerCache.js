@@ -126,6 +126,7 @@ class LayerCache {
 		// Try to get from local cache
 		if( this.jsonlCache ) {
 			cacheRes = await this.jsonlCache.getCacheCompletion(cacheObj);
+			// console.log("jsonl", cacheRes);
 			if( cacheRes ) {
 				return cacheRes;
 			}
@@ -134,6 +135,7 @@ class LayerCache {
 		// Get from remote mongo cache
 		if( this.mongoCache ) {
 			cacheRes = await this.mongoCache.getCacheCompletion(cacheObj);
+			// console.log("mongo", cacheRes);
 			if( cacheRes ) {
 				// Transfer to local if possible
 				if( this.jsonlCache ) {

@@ -73,7 +73,7 @@ function getCacheCollectionName(type, cacheObj) {
 		});
 
 		// And return
-		if(record) {
+		if(record && record.completion) {
 			return record.completion;
 		} else {
 			return null;

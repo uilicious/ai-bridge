@@ -91,6 +91,10 @@ const getEmbedding = require("./openai/getEmbedding");
 
 		// Generate the temp key, in accordence to the tempreture setting
 		if( tempKey < 0 ) {
+			if( opt.temperature == 0 ) {
+				tempKey = 0;
+			}
+
 			let tempRange = parseFloat(opt.temperature) * parseFloat(this.config.temperatureKeyMultiplier);
 			if( Math.floor(tempRange) <= 0 ) {
 				tempKey = 0;
@@ -101,7 +105,7 @@ const getEmbedding = require("./openai/getEmbedding");
 
 		// Get the completion from cache if possible
 		let cacheRes = await this.layerCache.getCacheCompletion(prompt, opt, cacheGrp, tempKey);
-		if (cacheRes) {
+		if (cacheRes != null) {
 			streamListener(cacheRes);
 			return {
 				completion: cacheRes,
@@ -114,8 +118,9 @@ const getEmbedding = require("./openai/getEmbedding");
 		}
 		
 		// Fallback, get from the openAI API, without caching
-		let completionRes = this._pQueue.add(async function() {
-			return await getCompletion(this._openai_key, opt, streamListener);
+		let openai_key = this._openai_key;
+		let completionRes = await this._pQueue.add(async function() {
+			return await getCompletion(openai_key, opt, streamListener);
 		});
 
 		// Add to cache
@@ -156,8 +161,9 @@ const getEmbedding = require("./openai/getEmbedding");
 		}
 
 		// Get the openai embedding
-		let embeddingRes = this._pQueue.add(async function() {
-			return await getEmbedding(this._openai_key, opt);
+		let openai_key = this._openai_key;
+		let embeddingRes = await this._pQueue.add(async function() {
+			return await getEmbedding(openai_key, opt);
 		});
 
 		// Add the result into cache
