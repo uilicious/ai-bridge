@@ -33,7 +33,7 @@ function getCleanPromptOpt(promptOpt) {
 			cleanOpt[key] = promptOpt[key];
 		}
 	}
-	return promptOpt;
+	return cleanOpt;
 }
 
 /**
