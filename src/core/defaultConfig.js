@@ -82,7 +82,7 @@ module.exports = {
 	//----------------------------------------
 
 	"default": {
-		"completions": {
+		"completion": {
 			// Default model to use
 			"model": "text-davinci-003",
 
@@ -142,7 +142,7 @@ module.exports = {
 			"logprobs": null
 		},
 
-		"embeddings": {
+		"embedding": {
 			// Default model to use
 			"model": "text-embedding-ada-002",
 

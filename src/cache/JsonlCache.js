@@ -16,6 +16,14 @@ const fileExist = require("../util/fileExist");
  * Given the type and cacheObj, get the full cacheFilePath relative from the baseDir
  */
 function getCacheFilePath(type, cacheObj) {
+	if( cacheObj.promptOpt == null ) {
+		// console.warn(cacheObj);
+		throw "Missing prompt options in cacheObj"
+	}
+	if( cacheObj.promptOpt.model == null ) {
+		// console.warn(cacheObj);
+		throw "Missing model options in cacheObj"
+	}
 	return path.join( cacheObj.promptOpt.model, type, cacheObj.cacheGrp, cacheObj.hash.slice(0,2), cacheObj.hash.slice(2,4), cacheObj.hash+".jsonl" )
 }
 

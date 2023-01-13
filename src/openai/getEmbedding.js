@@ -44,10 +44,18 @@ async function getEmbedding(
 			delete reqJson[key];
 		}
 	}
-    //
+
+    // Normalize prompt to input
+    reqJson.input = reqJson.input || reqJson.prompt;
+    delete reqJson.prompt;
+
+    // Remove rawAPI flag, we will not be supporting it
+    let useRawApi = false;
+	delete reqJson.rawApi;
 
     // Non streaming request handling
     //----------------------------------
+    let respErr = null;
     for(let tries=0; tries < 2; ++tries) {
         try {
             // Perform the JSON request

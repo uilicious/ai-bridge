@@ -74,7 +74,7 @@ const getEmbedding = require("./openai/getEmbedding");
 		}
 
 		// Merge the options with the default
-		let opt = Object.assign({}, this.config.default.completions, promptOpts);
+		let opt = Object.assign({}, this.config.default.completion, promptOpts);
 		opt.prompt = prompt;
 
 		// Parse the prompt, and compute its token count
@@ -143,13 +143,13 @@ const getEmbedding = require("./openai/getEmbedding");
 	 * @param {Object} embeddingOpt 
 	 * @param {String} cacheGrp 
 	 */
-	async getEmbedding(prompt, embeddingOpt = {}, cacheGrp = "default", tempKey = 0) {
+	async getEmbedding(prompt, embeddingOpt = {}, cacheGrp = "default") {
 		// Merge the options with the default
 		let opt = Object.assign({}, this.config.default.embedding, embeddingOpt);
 		opt.prompt = prompt;
 
 		// Get from the cache
-		let cacheRes = await this.layerCache.getCacheEmbedding(prompt, embeddingOpt, cacheGrp);
+		let cacheRes = await this.layerCache.getCacheEmbedding(prompt, opt, cacheGrp);
 		if (cacheRes) {
 			return {
 				embedding: cacheRes,
@@ -173,7 +173,7 @@ const getEmbedding = require("./openai/getEmbedding");
 		return {
 			embedding: embeddingRes,
 			token: {
-				prompt: (tokenizer.encode( embeddingRes )).bpe.length,
+				prompt: (tokenizer.encode( prompt )).bpe.length,
 				cache: false
 			}
 		};
