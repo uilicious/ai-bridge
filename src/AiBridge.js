@@ -3,6 +3,7 @@ const configObjectMerge = require("@js-util/config-object-merge");
 const LayerCache = require("./cache/LayerCache");
 const defaultConfig = require("./core/defaultConfig");
 const PromiseQueue = require("promise-queue")
+const sleep = require('sleep-promise');
 
 // Initialize the tokenizer
 const GPT3Tokenizer = require('gpt3-tokenizer').default;
@@ -68,6 +69,9 @@ const getEmbedding = require("./openai/getEmbedding");
 	 * @param {Number} tempKey to use, automatically generated if -1
 	 */
 	async getCompletion(prompt, promptOpts = {}, streamListener = null, cacheGrp = "default", tempKey = -1) {
+		// self ref
+		let self = this;
+
 		// Safety
 		if( streamListener == null ) {
 			streamListener = () => {};
@@ -120,7 +124,13 @@ const getEmbedding = require("./openai/getEmbedding");
 		// Fallback, get from the openAI API, without caching
 		let openai_key = this._openai_key;
 		let completionRes = await this._pQueue.add(async function() {
-			return await getCompletion(openai_key, opt, streamListener);
+			let ret = await getCompletion(openai_key, opt, streamListener);
+
+			// Thorttling controls
+			if(self.config.providerLatencyAdd > 0) {
+				await sleep(self.config.providerLatencyAdd);
+			}
+			return ret;
 		});
 
 		// Add to cache
@@ -144,6 +154,9 @@ const getEmbedding = require("./openai/getEmbedding");
 	 * @param {String} cacheGrp 
 	 */
 	async getEmbedding(prompt, embeddingOpt = {}, cacheGrp = "default") {
+		// self ref
+		let self = this;
+
 		// Merge the options with the default
 		let opt = Object.assign({}, this.config.default.embedding, embeddingOpt);
 		opt.prompt = prompt;
@@ -163,7 +176,13 @@ const getEmbedding = require("./openai/getEmbedding");
 		// Get the openai embedding
 		let openai_key = this._openai_key;
 		let embeddingRes = await this._pQueue.add(async function() {
-			return await getEmbedding(openai_key, opt);
+			let ret = await getEmbedding(openai_key, opt);
+
+			// Thorttling controls
+			if(self.config.providerLatencyAdd > 0) {
+				await sleep(self.config.providerLatencyAdd);
+			}
+			return ret;
 		});
 
 		// Add the result into cache

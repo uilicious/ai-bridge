@@ -24,7 +24,12 @@ module.exports = {
 	//
 	// Is not used to rate limit cache checks
 	//----------------------------------------
+	
+	// Number of provider requests that can occur concurrently
 	"providerRateLimit": 1,
+
+	// Latency delay between request, to be used with rate limit, to further "tune down"
+	"providerLatencyAdd": 100,
 
 	// Custom model mapping,
 	// This is used to divert operations on a model to model level
