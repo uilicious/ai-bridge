@@ -219,7 +219,7 @@ class LayerCache {
 
 		// Get from remote mongo cache
 		if( this.mongoCache ) {
-			cacheRes = await this.mongoCache.addCacheEmbedding(cacheObj);
+			cacheRes = await this.mongoCache.getCacheEmbedding(cacheObj);
 			if( cacheRes ) {
 				// Transfer to local if possible
 				if( this.jsonlCache ) {

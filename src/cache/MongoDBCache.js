@@ -125,10 +125,13 @@ function getCacheCollectionName(type, cacheObj) {
 		// Connect to the collection
 		let collection = this.mongoClient.db().collection(collectionName);
 
+		// Normalize prompt / input
+		let prompt = cacheObj.prompt || cacheObj.input;
+		
 		// Search for the record
 		let record = await collection.findOne({
 			hash: cacheObj.hash,
-			prompt: cacheObj.prompt,
+			prompt: prompt,
 
 			// Excluded from search, as options kind dun matter here
 			// opt: cacheObj.cleanOpt
@@ -152,11 +155,14 @@ function getCacheCollectionName(type, cacheObj) {
 		// Connect to the collection
 		let collection = this.mongoClient.db().collection(collectionName);
 
+		// Normalize prompt / input
+		let prompt = cacheObj.prompt || cacheObj.input;
+		
 		// Upsert the record
 		await collection.updateOne(
 			{
 				hash: cacheObj.hash,
-				prompt: cacheObj.prompt,
+				prompt: prompt,
 				opt: cacheObj.cleanOpt
 			},
 			{

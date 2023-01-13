@@ -182,7 +182,7 @@ async function silentlySetupDir(dirPath) {
 		if( filePath == null ) {
 			filePath = cacheObj._jsonlFilePath = path.resolve(this.baseDir, getCacheFilePath("embedding", cacheObj));
 		}
-		
+
 		// Scan the file, if it exists
 		// this is done without file locking, as a performance speed up
 		// for cache hit, at the cost of higher latency on cache miss
@@ -190,6 +190,10 @@ async function silentlySetupDir(dirPath) {
 		// additionally because it can cause read/write contention - it can fail.
 		// as such any error here is ignored.
 		if( await fileExist(filePath) ) {
+
+			// Normalize prompt / input
+			let prompt = cacheObj.prompt || cacheObj.input;
+			
 			try {
 				// Scan the various jsonl lines
 				const rl = jsonl.readlines(filePath);
@@ -234,6 +238,9 @@ async function silentlySetupDir(dirPath) {
 		
 		// Perform actions within a lock
 		try {
+			// Normalize prompt / input
+			let prompt = cacheObj.prompt || cacheObj.input;
+			
 			// Scan the file, as race conditions are possible
 			if( await this.getCacheCompletion(cacheObj) != null ) {
 				// Abort write, as record already exists
@@ -242,7 +249,7 @@ async function silentlySetupDir(dirPath) {
 
 			// Prepare the jsonl obj
 			let jsonLineObj = { 
-				prompt:cacheObj.prompt, 
+				prompt:prompt, 
 				embedding:embedding,
 				opt: cacheObj.cleanOpt
 			};
