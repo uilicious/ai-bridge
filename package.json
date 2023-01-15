@@ -21,7 +21,8 @@
     "node-fetch": "=2.6.7",
     "node-jsonl": "=0.1.0",
     "promise-queue": "=2.2.5",
-    "proper-lockfile": "=4.1.2"
+    "proper-lockfile": "=4.1.2",
+    "sleep-promise": "^9.1.0"
   },
   "devDependencies": {
     "chai": "^4.3.7",
