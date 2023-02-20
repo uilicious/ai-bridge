@@ -3,7 +3,6 @@
 //------------------------------------------------------------------
 
 const { MongoClient } = require('mongodb');
-const jsonStringify = require('fast-json-stable-stringify');
 
 //------------------------------------------------------------------
 // Utility function

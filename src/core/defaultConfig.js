@@ -10,13 +10,13 @@ module.exports = {
 		// For openAI, all you will need is the apikey
 		"openai": null,
 
-		// For forefront.ai, you will need to provide both an API key
-		// and a URL mapping for each model
-		"forefront.ai": {
-			"apikey": null,
-			"models": {
-			}
-		}
+		// // For forefront.ai, you will need to provide both an API key
+		// // and a URL mapping for each model
+		// "forefront.ai": {
+		// 	"apikey": null,
+		// 	"models": {
+		// 	}
+		// }
 	},
 
 	// Concurrent provider access
