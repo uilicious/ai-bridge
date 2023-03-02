@@ -19,7 +19,9 @@ const defaultConfig = {
 	"top_p": 1,
 	"frequency_penalty": 0,
 	"presence_penalty": 0,
-	"best_of": 1,
+
+	// NOTE this is not supported in gpt-3.5-turbo onwards
+	// "best_of": 1,
 
 	// Important note!: we split the endoftext token very
 	// intentionally,to avoid causing issues when this file is parsed
@@ -131,6 +133,12 @@ async function getCompletion(
 					}
 				});
 				respJson = await resp.json();
+				
+				// Throw error accordingly
+				if( respJson.error ) {
+					console.warn( "getCompletion API error", respJson.error)
+					throw `[${respJson.error.type}] ${respJson.message}`;
+				}
 		
 				// Check for response
 				if( respJson.choices && respJson.choices[0] ) {

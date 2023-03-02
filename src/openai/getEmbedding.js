@@ -27,14 +27,14 @@ const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
  * @return {Sring | Object} completion string, if rawApi == false (default), else return the raw API JSON response
  */
 async function getEmbedding(
-    openai_key, inConfig, 
-    completionURL = 'https://api.openai.com/v1/embeddings'
+	openai_key, inConfig, 
+	completionURL = 'https://api.openai.com/v1/embeddings'
 ) {
 	// Normalzied string prompt to object
 	if (typeof inConfig === 'string' || inConfig instanceof String) {
 		inConfig = { prompt: inConfig };
 	}
-    
+	
 	// Join it together
 	let reqJson = Object.assign({}, defaultConfig, inConfig);
 
@@ -45,45 +45,51 @@ async function getEmbedding(
 		}
 	}
 
-    // Normalize prompt to input
-    reqJson.input = reqJson.input || reqJson.prompt;
-    delete reqJson.prompt;
+	// Normalize prompt to input
+	reqJson.input = reqJson.input || reqJson.prompt;
+	delete reqJson.prompt;
 
-    // Remove rawAPI flag, we will not be supporting it
-    let useRawApi = false;
+	// Remove rawAPI flag, we will not be supporting it
+	let useRawApi = false;
 	delete reqJson.rawApi;
 
-    // Non streaming request handling
-    //----------------------------------
-    let respErr = null;
-    for(let tries=0; tries < 2; ++tries) {
-        try {
-            // Perform the JSON request
-            const resp = await fetch(completionURL, {
-                method: 'post',
-                body: JSON.stringify(reqJson),
-                headers: {
-                    'Content-Type': 'application/json',
-                    "Authorization": `Bearer ${openai_key}`
-                }
-            });
-            respJson = await resp.json();
-    
-            // Check for response
-            if( respJson.data && respJson.data[0] && respJson.data[0].embedding ) {
-                // Return the JSON as it is
-                if( useRawApi ) {
-                    return respJson;
-                }
-    
-                // Return the full embedding
-                return respJson.data[0].embedding;
-            }
-        } catch(e) {
-            respErr = e;
-        }
-    }
-    
+	// Non streaming request handling
+	//----------------------------------
+	let respErr = null;
+	for(let tries=0; tries < 2; ++tries) {
+		try {
+			// Perform the JSON request
+			const resp = await fetch(completionURL, {
+				method: 'post',
+				body: JSON.stringify(reqJson),
+				headers: {
+					'Content-Type': 'application/json',
+					"Authorization": `Bearer ${openai_key}`
+				}
+			});
+			respJson = await resp.json();
+			
+			// Throw error accordingly
+			if( respJson.error ) {
+				console.warn( "getCompletion API error", respJson.error)
+				throw `[${respJson.error.type}] ${respJson.message}`;
+			}
+	
+			// Check for response
+			if( respJson.data && respJson.data[0] && respJson.data[0].embedding ) {
+				// Return the JSON as it is
+				if( useRawApi ) {
+					return respJson;
+				}
+	
+				// Return the full embedding
+				return respJson.data[0].embedding;
+			}
+		} catch(e) {
+			respErr = e;
+		}
+	}
+	
 	// Handle unexpected response
 	if( respErr ) {
 		console.warn([

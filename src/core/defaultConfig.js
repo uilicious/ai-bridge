@@ -87,22 +87,23 @@ module.exports = {
 	//----------------------------------------
 
 	"default": {
+
 		"completion": {
 			// Default model to use
-			"model": "text-davinci-003",
+			"model": "gpt-3.5-turbo-0301",
 
 			// Total tokens computes the max_tokens
 			// using the current prompt.
 			//
 			// This setting is ignored if max_tokens is set
-			"total_tokens": 4090,
+			"total_tokens": 4080,
 
 			// Maximum token to use for generation
 			"max_tokens": null,
 
-			// Default prompt and stop token
-			"prompt": "<|endoftext|>",
-			"stop": "<|endoftext|>",
+			// // Default prompt and stop token
+			// "prompt": "<|endoftext|>",
+			// "stop": "<|endoftext|>",
 
 			// Default temperature to use, we set to 0
 			// by default, as this makes all prompts highly cachable.
@@ -110,14 +111,14 @@ module.exports = {
 			// range from 0-1
 			"temperature": 0,
 
-			// Nucleaus sampling (see docs for more details)
-			//
-			// range from 0-1
-			"top_p": 1,
+			// // Nucleaus sampling (see docs for more details)
+			// //
+			// // range from 0-1
+			// "top_p": 1,
 
-			// Number of completion to create
-			// generally recommended to do multiple calls instead
-			"n": 1,
+			// // Number of completion to create
+			// // generally recommended to do multiple calls instead
+			// "n": 1,
 
 			// Enable / Disable streaming, callback function should be
 			// set if stream is enabled
@@ -127,10 +128,10 @@ module.exports = {
 			"presence_penalty": 0,
 			"frequency_penalty": 0,
 
-			// When use with N, decide the number possible answer to evaluate from
-			// IMHO, highly not recommended to be used. 
-			// As its unclear/unpredictable on how one sample is chosen over another.
-			"best_of":1,
+			// // When use with N, decide the number possible answer to evaluate from
+			// // IMHO, highly not recommended to be used. 
+			// // As its unclear/unpredictable on how one sample is chosen over another.
+			// "best_of":1,
 
 			// Proabability modification for individual tokens
 			// avoid using, unless you really know what your doing

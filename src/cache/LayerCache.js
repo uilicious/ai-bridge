@@ -23,7 +23,10 @@ const cleanPromptKeys = [
 	
 	"presence_penalty",
 	"frequency_penalty",
-	"best_of",
+
+	// NOTE this is not supported in gpt-3.5-turbo onwards
+	// "best_of",
+	
 	"logit_bias",
 	"suffix"
 ];

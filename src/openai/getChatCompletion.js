@@ -114,6 +114,12 @@ async function getChatCompletion(
 				});
 				respJson = await resp.json();
 		
+				// Throw error accordingly
+				if( respJson.error ) {
+					console.warn( "getCompletion API error", respJson.error)
+					throw `[${respJson.error.type}] ${respJson.message}`;
+				}
+		
 				// Check for response
 				if( respJson.choices && respJson.choices[0] ) {
 

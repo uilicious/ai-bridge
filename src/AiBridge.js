@@ -11,6 +11,7 @@ const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
 
 // OpenAI calls
 const getChatCompletion = require("./openai/getChatCompletion");
+const getCompletion = require("./openai/getCompletion");
 const getEmbedding = require("./openai/getEmbedding");
 
 /**
@@ -167,7 +168,7 @@ const getEmbedding = require("./openai/getEmbedding");
 		}
 
 		// Merge the options with the default
-		let opt = Object.assign({}, this.config.default.completion, promptOpts);
+		let opt = Object.assign({}, this.config.default.chatCompletion, promptOpts);
 		opt.prompt = JSON.stringify(messages);
 		opt.messages = messages;
 
