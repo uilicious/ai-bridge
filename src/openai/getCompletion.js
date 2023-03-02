@@ -5,7 +5,6 @@
  **/
 
 // Load dependency modules, and keys
-const fetch = require("node-fetch");
 const GPT3Tokenizer = require('gpt3-tokenizer').default;
 
 // Default config settings to use
@@ -181,7 +180,7 @@ async function getCompletion(
 		//----------------------------------
 
 		// Perform the initial streaming request request
-		const resp = await fetch(completionURL, {
+		const resp = await fetch(targetURL, {
 			method: 'post',
 			body: JSON.stringify(reqJson),
 			headers: {
@@ -249,14 +248,16 @@ async function getCompletion(
 						const dataJson = dataEvent.slice(6).trim();
 						const dataObj = JSON.parse( dataJson );
 
-						// Get the token
-						const strToken = dataObj.choices[0]?.message?.text || dataObj.choices[0].text;
+						// Get the token (delta is for chatGPT, text is for completion API)
+						const strToken = dataObj.choices[0]?.delta?.content || dataObj.choices[0].text;
 
 						// Add it to the parsedRes
-						parsedRes += strToken;
-
-						// Stream the token back as an event
-						await streamListener(strToken);
+						if( strToken ) {
+							parsedRes += strToken;
+	
+							// Stream the token back as an event
+							await streamListener(strToken);
+						}
 						continue;
 					}
 					
@@ -284,7 +285,7 @@ async function getCompletion(
 			console.warn("Unexpected event processing error", e)
 			throw "Unexpected event processing error, see warning logs for more details";
 		} finally {
-			writer.close();
+			// writer.close();
 		}
 	}
 

@@ -5,7 +5,6 @@
  **/
 
 // Load dependency modules, and keys
-const fetch = require("node-fetch");
 const GPT3Tokenizer = require('gpt3-tokenizer').default;
 
 // Default config settings to use

@@ -5,7 +5,6 @@
  **/
 
 // Load dependency modules, and keys
-const fetch = require("node-fetch");
 const GPT3Tokenizer = require('gpt3-tokenizer').default;
 
 // Default config settings to use
@@ -264,7 +263,7 @@ async function getChatCompletion(
 			console.warn("Unexpected event processing error", e)
 			throw "Unexpected event processing error, see warning logs for more details";
 		} finally {
-			writer.close();
+			// writer.close();
 		}
 	}
 
