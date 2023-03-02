@@ -9,7 +9,7 @@ if( require.main === module ) {
 	(async function() {
 
 		// Argument check
-		const reqPrompt = process.argv[2];
+		const reqPrompt = process.argv.slice(2).join(" ");
 		if( reqPrompt == null ) {
 			console.error( "[ERROR] Missing request prompt as first argument" );
 			console.error( `[ERROR] Example: node ./CompletionCLI.js "tell me a joke?"` );
