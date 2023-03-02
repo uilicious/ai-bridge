@@ -16,6 +16,11 @@ const cleanPromptKeys = [
 	"stop",
 	"temperature",
 	"top_p",
+
+	// We do not support "n" due to the limitations of our API design
+	// it would also be non cache friendly
+	// "n",
+	
 	"presence_penalty",
 	"frequency_penalty",
 	"best_of",
@@ -180,6 +185,94 @@ class LayerCache {
 		}
 		if( this.mongoCache ) {
 			cacheResArr.push( this.mongoCache.addCacheCompletion(cacheObj, completion) );
+		}
+
+		// Await for all
+		await Promise.all(cacheResArr);
+
+		// Add to cache completed
+		return;
+	}
+	
+	/**
+	 * Given the prompt, and its options, return its completion if its found in cache.
+	 * Else return null (no valid result)
+	 * 
+	 * @param {String} prompt to use
+	 * @param {Object} promptOpt options to use
+	 * @param {String} cacheGrp to use for caching
+	 * @param {int}    tempKey for cache hit
+	 */
+	 async getCacheChatCompletion(prompt, promptOpt, cacheGrp = "default", tempKey = 0) {
+		// Skip, if disabled
+		if( !this._promptCache_enable ) {
+			return;
+		}
+
+		// Cache object to use (with tempKey)
+		let cacheObj = getCacheObj(prompt, promptOpt, cacheGrp);
+		cacheObj.tempKey = tempKey;
+
+		// Cache result
+		let cacheRes = null;
+
+		// Try to get from local cache
+		if( this.jsonlCache ) {
+			cacheRes = await this.jsonlCache.getCacheChatCompletion(cacheObj);
+			// console.log("jsonl", cacheRes);
+			if( cacheRes ) {
+				return cacheRes;
+			}
+		}
+
+		// Get from remote mongo cache
+		if( this.mongoCache ) {
+			cacheRes = await this.mongoCache.getCacheChatCompletion(cacheObj);
+			// console.log("mongo", cacheRes);
+			if( cacheRes ) {
+				// Transfer to local if possible
+				if( this.jsonlCache ) {
+					this.jsonlCache.addCacheChatCompletion(cacheObj, cacheRes);
+				}
+
+				// Return
+				return cacheRes;
+			}
+		}
+
+		// Nothing found, return null
+		return null;
+	}
+	
+	/**
+	 * Given the prompt, its options, and its completion.
+	 * Add it into the cache layer
+	 * 
+	 * @param {String} prompt to use
+	 * @param {String} completion to store
+	 * @param {Object} promptOpt options to use
+	 * @param {String} cacheGrp to use for caching
+	 * @param {int}    tempKey for cache hit
+	 */
+	 async addCacheChatCompletion(prompt, completion, promptOpt, cacheGrp = "default", tempKey = 0) {
+		// Skip, if disabled
+		if( !this._promptCache_enable ) {
+			return;
+		}
+
+		// Cache object to use (with tempKey)
+		let cacheObj = getCacheObj(prompt, promptOpt, cacheGrp);
+		cacheObj.tempKey = tempKey;
+
+		// Cache result array (to await at the end)
+		let cacheResArr = [];
+
+		// Try to add to various cache
+		if( this.jsonlCache ) {
+			cacheResArr.push( this.jsonlCache.addCacheChatCompletion(cacheObj, completion) );
+		}
+		if( this.mongoCache ) {
+			cacheResArr.push( this.mongoCache.addCacheChatCompletion(cacheObj, completion) );
 		}
 
 		// Await for all

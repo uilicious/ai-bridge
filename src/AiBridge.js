@@ -10,7 +10,7 @@ const GPT3Tokenizer = require('gpt3-tokenizer').default;
 const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
 
 // OpenAI calls
-const getCompletion = require("./openai/getCompletion");
+const getChatCompletion = require("./openai/getChatCompletion");
 const getEmbedding = require("./openai/getEmbedding");
 
 /**
@@ -125,6 +125,97 @@ const getEmbedding = require("./openai/getEmbedding");
 		let openai_key = this._openai_key;
 		let completionRes = await this._pQueue.add(async function() {
 			let ret = await getCompletion(openai_key, opt, streamListener);
+
+			// Thorttling controls
+			if(self.config.providerLatencyAdd > 0) {
+				await sleep(self.config.providerLatencyAdd);
+			}
+			return ret;
+		});
+
+		// Add to cache
+		await this.layerCache.addCacheCompletion(prompt, completionRes, opt, cacheGrp, tempKey);
+
+		// Return full completion
+		return {
+			completion: completionRes,
+			token: {
+				prompt: promptTokenObj.bpe.length,
+				completion: (tokenizer.encode( completionRes )).bpe.length,
+				cache: false
+			}
+		};
+	}
+
+	/**
+	 * Get the completion of a chat
+	 * 
+	 * @param {Array<Object>} messages array, containing object with role/content to use
+	 * @param {Object} promptOpts prompt options to use, merged with default
+	 * @param {Function} streamListener, for handling streaming requests
+	 * 
+	 * @param {String} cacheGrp to cache under, used for grouping cache requests
+	 * @param {Number} tempKey to use, automatically generated if -1
+	 */
+	 async getChatCompletion(messages, promptOpts = {}, streamListener = null, cacheGrp = "default", tempKey = -1) {
+		// self ref
+		let self = this;
+
+		// Safety
+		if( streamListener == null ) {
+			streamListener = () => {};
+		}
+
+		// Merge the options with the default
+		let opt = Object.assign({}, this.config.default.completion, promptOpts);
+		opt.prompt = JSON.stringify(messages);
+		opt.messages = messages;
+
+		// Parse the prompt, and compute its token count
+		let promptTokenObj = tokenizer.encode( opt.prompt );
+
+		// Normalize "max_tokens" auto
+		if( opt.max_tokens == "auto" || opt.max_tokens == null ) {
+			let totalTokens = opt.total_tokens || 4080;
+			let tokenLength = promptTokenObj.bpe.length - (messages.length * 2);
+			opt.max_tokens = totalTokens - tokenLength
+			if( opt.max_tokens <= 50 ) {
+				throw `Prompt is larger or nearly equal to total token count (${tokenLength}/${totalTokens})`;
+			}
+		}
+
+		// Generate the temp key, in accordence to the tempreture setting
+		if( tempKey < 0 ) {
+			if( opt.temperature == 0 ) {
+				tempKey = 0;
+			}
+
+			let tempRange = parseFloat(opt.temperature) * parseFloat(this.config.temperatureKeyMultiplier);
+			if( Math.floor(tempRange) <= 0 ) {
+				tempKey = 0;
+			} else {
+				tempKey = Math.floor( Math.random() * tempRange );
+			}
+		}
+
+		// Get the completion from cache if possible
+		let cacheRes = await this.layerCache.getChatCacheCompletion(opt.prompt, opt, cacheGrp, tempKey);
+		if (cacheRes != null) {
+			streamListener(cacheRes);
+			return {
+				completion: cacheRes,
+				token: {
+					prompt: promptTokenObj.bpe.length,
+					completion: (tokenizer.encode( cacheRes )).bpe.length,
+					cache: true
+				}
+			};
+		}
+		
+		// Fallback, get from the openAI API, without caching
+		let openai_key = this._openai_key;
+		let completionRes = await this._pQueue.add(async function() {
+			let ret = await getChatCompletion(openai_key, opt, streamListener);
 
 			// Thorttling controls
 			if(self.config.providerLatencyAdd > 0) {

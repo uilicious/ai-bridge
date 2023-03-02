@@ -82,11 +82,14 @@ async function silentlySetupDir(dirPath) {
 		await silentlySetupDir(this.baseDir)
 	}
 
+	// Completion API cache
+	// ---------------------
+
 	/**
 	 * Given the prompt details, search and get the completion record in cache.
 	 * Get has been optimized to be performed without file locking.
 	 */
-	async getCacheCompletion(cacheObj) {
+	 async getCacheCompletion(cacheObj) {
 		// Get the full filepath
 		let filePath = cacheObj._jsonlFilePath;
 		if( filePath == null ) {
@@ -171,6 +174,102 @@ async function silentlySetupDir(dirPath) {
 			await lockRelease();
 		}
 	}
+
+	// Chat API cache
+	// ---------------------
+
+	/**
+	 * Given the prompt details, search and get the completion record in cache.
+	 * Get has been optimized to be performed without file locking.
+	 */
+	 async getCacheChatCompletion(cacheObj) {
+		// Get the full filepath
+		let filePath = cacheObj._jsonlFilePath;
+		if( filePath == null ) {
+			filePath = cacheObj._jsonlFilePath = path.resolve(this.baseDir, getCacheFilePath("chat", cacheObj));
+		}
+		
+		// Scan the file, if it exists
+		// this is done without file locking, as a performance speed up
+		// for cache hit, at the cost of higher latency on cache miss
+		//
+		// additionally because it can cause read/write contention - it can fail.
+		// as such any error here is ignored.
+		if( await fileExist(filePath) ) {
+			try {
+				// Scan the various jsonl lines
+				const rl = jsonl.readlines(filePath);
+				while(true) {
+					const {value, done} = await rl.next();
+					if(done) break;
+
+					// Check the tempKey
+					if( value.tempKey != cacheObj.tempKey ) {
+						continue;
+					}
+
+					// Reject non matching prompt
+					if( value.prompt != cacheObj.prompt ) {
+						continue;
+					}
+
+					// Return the completion
+					return value.completion;
+				}
+			} catch(e) {
+				// exception is ignored
+			}
+		} else {
+			// Preamptively create the parent dir, without awaiting
+			// this helps speed up addCache in subsequent call
+			silentlySetupDir( path.dirname(filePath) );
+		}
+
+		// End is reached, nothign found, return null
+		return null;
+	}
+
+	/**
+	 * Given the chat details, add the completion record into cache
+	 */
+	async addCacheChatCompletion(cacheObj, completion) {
+		// Get the full filepath
+		let filePath = cacheObj._jsonlFilePath;
+		if( filePath == null ) {
+			filePath = cacheObj._jsonlFilePath = path.resolve(this.baseDir, getCacheFilePath("chat", cacheObj));
+		}
+		
+		// Get the write lock
+		let lockRelease = await lockfile.lock(filePath, { realpath:false });
+		
+		// Perform actions within a lock
+		try {
+			// Scan the file, as race conditions are possible
+			if( await this.getCacheCompletion(cacheObj) != null ) {
+				// Abort write, as record already exists
+				return;
+			}
+
+			// Prepare the jsonl obj
+			let jsonLineObj = { 
+				prompt:cacheObj.prompt, 
+				completion:completion,
+				opt: cacheObj.cleanOpt
+			};
+
+			// Write it
+			await fs.promises.appendFile(filePath, jsonStringify(jsonLineObj)+"\n", { encoding:"utf8" });
+
+			// And return
+			return
+		} finally {
+			// Release the lock
+			await lockRelease();
+		}
+	}
+
+	// Embedding API cache
+	// ---------------------
 
 	/**
 	 * Given the prompt details, search and get the completion record in cache.

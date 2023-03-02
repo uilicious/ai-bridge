@@ -19,7 +19,6 @@ const defaultConfig = {
 	"top_p": 1,
 	"frequency_penalty": 0,
 	"presence_penalty": 0,
-	"best_of": 1,
 
 	// Important note!: we split the endoftext token very
 	// intentionally,to avoid causing issues when this file is parsed
@@ -27,9 +26,6 @@ const defaultConfig = {
 
 	// // Default stop keyword
 	// "stop": ["<|"+"endoftext"+"|>"],
-
-	// // Default prompt
-	// "prompt": "<|"+"endoftext"+"|>",
 
 	// Return as a string if false, 
 	// else return the raw openAI API response
@@ -49,21 +45,26 @@ const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
  * 
  * @return {Sring | Object} completion string, if rawApi == false (default), else return the raw API JSON response
  */
-async function getCompletion(
+async function getChatCompletion(
 	openai_key, inConfig, 
 	streamListener = null, 
-	completionURL = 'https://api.openai.com/v1/completions', 
 	chatCompletionURL = 'https://api.openai.com/v1/chat/completions'
 ) {
-	// Normalzied string prompt to object
-	if (typeof inConfig === 'string' || inConfig instanceof String) {
-		inConfig = { prompt: inConfig };
-	}
 	// Safety
 	if( streamListener == null ) {
 		streamListener = () => {};
 	}
 
+	// Normalzied string prompt to object
+	if (typeof inConfig === 'string' || inConfig instanceof String) {
+		inConfig = { messages: [{ role:"user", content:inConfig }] };
+	}
+	
+	// Normalzied array messages to object
+	if (Array.isArray(inConfig)) {
+		inConfig = { messages: inConfig };
+	}
+	
 	// Join it together
 	let reqJson = Object.assign({}, defaultConfig, inConfig);
 
@@ -71,15 +72,10 @@ async function getCompletion(
 	let useRawApi = reqJson.rawApi || false;
 	delete reqJson.rawApi;
 
-	// Normalize prompt into a string
-	if (typeof reqJson.prompt !== 'string' && !(reqJson.prompt instanceof String)) {
-		reqJson.prompt = JSON.stringify(reqJson.prompt);
-	}
-
 	// Normalize "max_tokens" auto
 	if( reqJson.max_tokens == "auto" || reqJson.max_tokens == null ) {
 		let totalTokens = inConfig.total_tokens || 4080;
-		let tokenObj = tokenizer.encode( reqJson.prompt );
+		let tokenObj = tokenizer.encode( JSON.stringify(reqJson.messages) - (reqJson.messages.length * 2) );
 		reqJson.max_tokens = totalTokens - tokenObj.bpe.length;
 		if( reqJson.max_tokens <= 50 ) {
 			throw `Prompt is larger or nearly equal to total token count (${tokenObj.bpe.length}/${totalTokens})`;
@@ -94,21 +90,7 @@ async function getCompletion(
 	}
 	// Clean out unhandled props
 	delete reqJson.total_tokens;
-	delete reqJson.completionType;
-
-	// Remap the prompt to messages format for "chat" completion endpoint
-	let targetURL = completionURL;
-	if( inConfig.model.startsWith("gpt-3.5-turbo") ) {
-		targetURL = chatCompletionURL;
-
-		// Use the config messages if provided, else use the prompt
-		reqJson.messages = inConfig.messages || [ 
-			{ "role":"user", "content": reqJson.prompt }
-		];
-
-		// Delete the original prompt
-		delete reqJson.prompt;
-	}
+	delete reqJson.prompt;
 
 	// The return data to use
 	let respJson = null;
@@ -122,7 +104,7 @@ async function getCompletion(
 		for(let tries=0; tries < 2; ++tries) {
 			try {
 				// Perform the JSON request
-				const resp = await fetch(targetURL, {
+				const resp = await fetch(chatCompletionURL, {
 					method: 'post',
 					body: JSON.stringify(reqJson),
 					headers: {
@@ -173,7 +155,7 @@ async function getCompletion(
 		//----------------------------------
 
 		// Perform the initial streaming request request
-		const resp = await fetch(completionURL, {
+		const resp = await fetch(chatCompletionURL, {
 			method: 'post',
 			body: JSON.stringify(reqJson),
 			headers: {
@@ -300,4 +282,4 @@ async function getCompletion(
 }
 
 // Export the module
-module.exports = getCompletion;
+module.exports = getChatCompletion;

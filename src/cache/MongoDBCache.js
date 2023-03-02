@@ -46,12 +46,50 @@ function getCacheCollectionName(type, cacheObj) {
 		await this.mongoClient.connect();
 	}
 
+	// Completion API cache
+	// ---------------------
+
 	/**
 	 * Given the cacheObj, search and get the completion record in cache.
 	 */
 	async getCacheCompletion(cacheObj) {
+		return await this._getCacheCompletion(cacheObj, "completion");
+	}
+
+	/**
+	 * Add the completion record into cache,
+	 */
+	async addCacheCompletion(cacheObj, completion) {
+		return await this._addCacheCompletion(cacheObj, completion, "completion");
+	}
+
+	// Chat API cache
+	// ---------------------
+
+	/**
+	 * Given the cacheObj, search and get the completion record in cache.
+	 */
+	 async getCacheChatCompletion(cacheObj) {
+		return await this._getCacheCompletion(cacheObj, "chat");
+	}
+
+	/**
+	 * Add the completion record into cache,
+	 */
+	async addCacheChatCompletion(cacheObj, completion) {
+		return await this._addCacheCompletion(cacheObj, completion, "chat");
+	}
+
+	// Chat/Completion API cache
+	// ---------------------
+
+	/**
+	 * [Internal] get cache completion, 
+	 * which is used by both the chat and normal completion
+	 */
+	async _getCacheCompletion(cacheObj, collectionNamePrefix = "completion") {
 		// Get the collection name
-		let collectionName = getCacheCollectionName("completion", cacheObj);
+		let collectionName = getCacheCollectionName(collectionNamePrefix, cacheObj);
 
 		// Connect to the collection
 		let collection = this.mongoClient.db().collection(collectionName);
@@ -80,11 +118,12 @@ function getCacheCollectionName(type, cacheObj) {
 	}
 
 	/**
-	 * Given the cacheObj, add the completion record into cache
+	 * [Internal] add the completion record into cache,
+	 * which is used by both the chat and normal completion
 	 */
-	async addCacheCompletion(cacheObj, completion) {
+	async _addCacheCompletion(cacheObj, completion, collectionNamePrefix = "completion") {
 		// Get the collection name
-		let collectionName = getCacheCollectionName("completion", cacheObj);
+		let collectionName = getCacheCollectionName(collectionNamePrefix, cacheObj);
 
 		// Connect to the collection
 		let collection = this.mongoClient.db().collection(collectionName);
@@ -113,6 +152,9 @@ function getCacheCollectionName(type, cacheObj) {
 		// And return
 		return;
 	}
+
+	// Embedding API cache
+	// ---------------------
 
 	/**
 	 * Given the cacheObj, search and get the completion record in cache.
