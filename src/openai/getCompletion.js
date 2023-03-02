@@ -10,9 +10,9 @@ const GPT3Tokenizer = require('gpt3-tokenizer').default;
 
 // Default config settings to use
 const defaultConfig = {
-	"model": "text-davinci-003",
+	"model": "gpt-3.5-turbo-0301",
 	"temperature": 0,
-    "total_tokens": 4090,
+	"total_tokens": 4080,
 	"max_tokens": null,
 	"top_p": 1,
 	"frequency_penalty": 0,
@@ -48,9 +48,10 @@ const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
  * @return {Sring | Object} completion string, if rawApi == false (default), else return the raw API JSON response
  */
 async function getCompletion(
-    openai_key, inConfig, 
-    streamListener = null, 
-    completionURL = 'https://api.openai.com/v1/completions'
+	openai_key, inConfig, 
+	streamListener = null, 
+	completionURL = 'https://api.openai.com/v1/completions', 
+	chatCompletionURL = 'https://api.openai.com/v1/chat/completions'
 ) {
 	// Normalzied string prompt to object
 	if (typeof inConfig === 'string' || inConfig instanceof String) {
@@ -70,7 +71,7 @@ async function getCompletion(
 
 	// Normalize "max_tokens" auto
 	if( reqJson.max_tokens == "auto" || reqJson.max_tokens == null ) {
-        let totalTokens = inConfig.total_tokens || 4090;
+		let totalTokens = inConfig.total_tokens || 4080;
 		let tokenObj = tokenizer.encode( reqJson.prompt );
 		reqJson.max_tokens = totalTokens - tokenObj.bpe.length;
 		if( reqJson.max_tokens <= 50 ) {
@@ -87,47 +88,76 @@ async function getCompletion(
 	// Clean out unhandled props
 	delete reqJson.total_tokens;
 
+	// Remap the prompt to messages format for "chat" completion endpoint
+	let targetURL = completionURL;
+	if( inConfig.model.startsWith("gpt-3.5-turbo") ) {
+		targetURL = chatCompletionURL;
+		reqJson.messages = [ 
+			{ "role":"user", "content": reqJson.prompt }
+		];
+		delete reqJson.prompt;
+	}
+
 	// The return data to use
 	let respJson = null;
 	let respErr = null;
 
 	// Decide on how to handle streaming, or non streaming event
-    if(reqJson.stream != true) {
+	if(reqJson.stream != true) {
 
-        // Non streaming request handling
+		// Non streaming request handling
 		//----------------------------------
-        for(let tries=0; tries < 2; ++tries) {
-            try {
-                // Perform the JSON request
-                const resp = await fetch(completionURL, {
-                    method: 'post',
-                    body: JSON.stringify(reqJson),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        "Authorization": `Bearer ${openai_key}`
-                    }
-                });
-                respJson = await resp.json();
-        
-                // Check for response
-                if( respJson.choices && respJson.choices[0] && respJson.choices[0].text ) {
-                    // Return the JSON as it is
-                    if( useRawApi ) {
-                        return respJson;
-                    }
-        
-                    // Return the completion in simple mode
-					let finalStr = respJson.choices[0].text.trim();
-					streamListener(finalStr)
-                    return finalStr;
-                }
-            } catch(e) {
-                respErr = e;
-            }
-        }
-    } else {
+		for(let tries=0; tries < 2; ++tries) {
+			try {
+				// Perform the JSON request
+				const resp = await fetch(targetURL, {
+					method: 'post',
+					body: JSON.stringify(reqJson),
+					headers: {
+						'Content-Type': 'application/json',
+						"Authorization": `Bearer ${openai_key}`
+					}
+				});
+				respJson = await resp.json();
+		
+				// Check for response
+				if( respJson.choices && respJson.choices[0] ) {
 
-        // Streaming request handling
+					// Handle the "chat" completion endpoint
+					if( respJson.choices[0].message && respJson.choices[0].message.content ) {
+						// Return the JSON as it is
+						if( useRawApi ) {
+							return respJson;
+						}
+			
+						// Return the completion in simple mode
+						let finalStr = respJson.choices[0].message.content.trim();
+						streamListener(finalStr)
+						return finalStr;
+					}
+
+					// Handle the legacy "completion" endpoint
+					if( respJson.choices[0].text ) {
+						// Return the JSON as it is
+						if( useRawApi ) {
+							return respJson;
+						}
+			
+						// Return the completion in simple mode
+						let finalStr = respJson.choices[0].text.trim();
+						streamListener(finalStr)
+						return finalStr;
+					}
+				}
+
+				return null;
+			} catch(e) {
+				respErr = e;
+			}
+		}
+	} else {
+
+		// Streaming request handling
 		//----------------------------------
 
 		// Perform the initial streaming request request
@@ -200,7 +230,7 @@ async function getCompletion(
 						const dataObj = JSON.parse( dataJson );
 
 						// Get the token
-						const strToken = dataObj.choices[0].text;
+						const strToken = dataObj.choices[0]?.message?.text || dataObj.choices[0].text;
 
 						// Add it to the parsedRes
 						parsedRes += strToken;
@@ -236,7 +266,7 @@ async function getCompletion(
 		} finally {
 			writer.close();
 		}
-    }
+	}
 
 	// Handle unexpected response
 	if( respErr ) {
