@@ -4,6 +4,7 @@ const LayerCache = require("./cache/LayerCache");
 const defaultConfig = require("./core/defaultConfig");
 const PromiseQueue = require("promise-queue")
 const sleep = require('sleep-promise');
+const jsonStringify = require('fast-json-stable-stringify');
 
 // Initialize the tokenizer
 const GPT3Tokenizer = require('gpt3-tokenizer').default;
@@ -17,7 +18,7 @@ const getEmbedding = require("./openai/getEmbedding");
 /**
  * Setup the AiBridge instance with the provided configuration
  */
- class AiBridge {
+class AiBridge {
 
 	/**
 	 * Setup the bridge with the relevent config. See config.sample.jsonc for more details.
@@ -167,17 +168,29 @@ const getEmbedding = require("./openai/getEmbedding");
 			streamListener = () => {};
 		}
 
+		// Normalize prompt if its a string, to the right format
+		if( typeof messages == "string" || messages instanceof String ) {
+			messages = [{
+				role: "user",
+				content: messages
+			}];
+		} else if( !Array.isArray(messages) && messages.role != null && messages.content != null ) {
+			messages = [messages];
+		}
+
 		// Merge the options with the default
-		let opt = Object.assign({}, this.config.default.chatCompletion, promptOpts);
-		opt.prompt = JSON.stringify(messages);
+		let opt = Object.assign({}, this.config.default.chat, promptOpts);
 		opt.messages = messages;
 
+		// Convert the messages to a string, for cache indexing
+		let prompt = jsonStringify(messages);
+
 		// Parse the prompt, and compute its token count
-		let promptTokenObj = tokenizer.encode( opt.prompt );
+		let promptTokenObj = tokenizer.encode( prompt );
 
 		// Normalize "max_tokens" auto
 		if( opt.max_tokens == "auto" || opt.max_tokens == null ) {
-			let totalTokens = opt.total_tokens || 4080;
+			let totalTokens = opt.total_tokens || 4050;
 			let tokenLength = promptTokenObj.bpe.length - (messages.length * 2);
 			opt.max_tokens = totalTokens - tokenLength
 			if( opt.max_tokens <= 50 ) {
@@ -200,7 +213,7 @@ const getEmbedding = require("./openai/getEmbedding");
 		}
 
 		// Get the completion from cache if possible
-		let cacheRes = await this.layerCache.getCacheChatCompletion(opt.prompt, opt, cacheGrp, tempKey);
+		let cacheRes = await this.layerCache.getCacheChatCompletion(prompt, opt, cacheGrp, tempKey);
 		if (cacheRes != null) {
 			streamListener(cacheRes);
 			return {
@@ -226,7 +239,7 @@ const getEmbedding = require("./openai/getEmbedding");
 		});
 
 		// Add to cache
-		await this.layerCache.addCacheCompletion(prompt, completionRes, opt, cacheGrp, tempKey);
+		await this.layerCache.addCacheChatCompletion(prompt, completionRes, opt, cacheGrp, tempKey);
 
 		// Return full completion
 		return {

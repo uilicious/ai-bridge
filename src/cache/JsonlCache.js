@@ -245,7 +245,7 @@ async function silentlySetupDir(dirPath) {
 		// Perform actions within a lock
 		try {
 			// Scan the file, as race conditions are possible
-			if( await this.getCacheCompletion(cacheObj) != null ) {
+			if( await this.getCacheChatCompletion(cacheObj) != null ) {
 				// Abort write, as record already exists
 				return;
 			}
