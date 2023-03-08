@@ -12,7 +12,7 @@ const defaultConfig = {
 	"model": "gpt-3.5-turbo-0301",
 	"temperature": 0,
 
-	"total_tokens": 4080,
+	"total_tokens": 4050,
 	"max_tokens": null,
 
 	"top_p": 1,
