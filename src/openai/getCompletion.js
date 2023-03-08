@@ -151,7 +151,7 @@ async function getCompletion(
 			
 						// Return the completion in simple mode
 						let finalStr = respJson.choices[0].message.content.trim();
-						streamListener(finalStr)
+						await streamListener(finalStr)
 						return finalStr;
 					}
 
@@ -164,7 +164,7 @@ async function getCompletion(
 			
 						// Return the completion in simple mode
 						let finalStr = respJson.choices[0].text.trim();
-						streamListener(finalStr)
+						await streamListener(finalStr)
 						return finalStr;
 					}
 				}

@@ -112,7 +112,7 @@ class AiBridge {
 		// Get the completion from cache if possible
 		let cacheRes = await this.layerCache.getCacheCompletion(prompt, opt, cacheGrp, tempKey);
 		if (cacheRes != null) {
-			streamListener(cacheRes);
+			await streamListener(cacheRes);
 			return {
 				completion: cacheRes,
 				token: {
@@ -215,7 +215,7 @@ class AiBridge {
 		// Get the completion from cache if possible
 		let cacheRes = await this.layerCache.getCacheChatCompletion(prompt, opt, cacheGrp, tempKey);
 		if (cacheRes != null) {
-			streamListener(cacheRes);
+			await streamListener(cacheRes);
 			return {
 				completion: cacheRes,
 				token: {
