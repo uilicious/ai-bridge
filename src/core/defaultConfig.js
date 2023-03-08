@@ -154,6 +154,29 @@ module.exports = {
 
 			// This is ignored on cache reads, but is sent on prompt request
 			"user": null
+		},
+
+		"chat": {
+			"model": "gpt-3.5-turbo-0301",
+			"temperature": 0,
+		
+			"total_tokens": 4080,
+			"max_tokens": null,
+		
+			"top_p": 1,
+			"frequency_penalty": 0,
+			"presence_penalty": 0,
+		
+			// Important note!: we split the endoftext token very
+			// intentionally,to avoid causing issues when this file is parsed
+			// by GPT-3 based AI.
+		
+			// // Default stop keyword
+			// "stop": ["<|"+"endoftext"+"|>"],
+		
+			// Return as a string if false, 
+			// else return the raw openAI API response
+			"rawApi": false
 		}
 	}
 }

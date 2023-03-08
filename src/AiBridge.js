@@ -200,7 +200,7 @@ const getEmbedding = require("./openai/getEmbedding");
 		}
 
 		// Get the completion from cache if possible
-		let cacheRes = await this.layerCache.getChatCacheCompletion(opt.prompt, opt, cacheGrp, tempKey);
+		let cacheRes = await this.layerCache.getCacheChatCompletion(opt.prompt, opt, cacheGrp, tempKey);
 		if (cacheRes != null) {
 			streamListener(cacheRes);
 			return {
