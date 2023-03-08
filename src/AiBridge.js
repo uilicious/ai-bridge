@@ -168,7 +168,7 @@ const getEmbedding = require("./openai/getEmbedding");
 		}
 
 		// Merge the options with the default
-		let opt = Object.assign({}, this.config.default.chatCompletion, promptOpts);
+		let opt = Object.assign({}, this.config.default.chat, promptOpts);
 		opt.prompt = JSON.stringify(messages);
 		opt.messages = messages;
 
