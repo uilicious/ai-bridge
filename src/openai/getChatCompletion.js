@@ -228,8 +228,8 @@ async function getChatCompletion(
 						const dataJson = dataEvent.slice(6).trim();
 						const dataObj = JSON.parse( dataJson );
 
-						// Get the token
-						const strToken = dataObj.choices[0]?.message?.text || dataObj.choices[0].text;
+						// Get the token (delta is for chatGPT, text is for completion API)
+						const strToken = dataObj.choices[0]?.delta?.content || dataObj.choices[0].text;
 
 						// Add it to the parsedRes
 						parsedRes += strToken;
