@@ -249,8 +249,11 @@ async function getCompletion(
 						const dataObj = JSON.parse( dataJson );
 
 						// Get the token (delta is for chatGPT, text is for completion API)
-						const strToken = dataObj.choices[0]?.delta?.content || dataObj.choices[0].text;
-
+						let strToken = "";
+						if( dataObj.choices && dataObj.choices[0] ) {
+							strToken = dataObj.choices[0]?.delta?.content || dataObj.choices[0]?.text  || "";
+						}
+						
 						// Add it to the parsedRes
 						if( strToken ) {
 							parsedRes += strToken;
