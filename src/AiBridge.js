@@ -297,7 +297,7 @@ class AiBridge {
 		return {
 			embedding: embeddingRes,
 			token: {
-				prompt: (tokenizer.encode( prompt )).bpe.length,
+				embedding: (tokenizer.encode( prompt )).bpe.length,
 				cache: false
 			}
 		};
