@@ -9,7 +9,7 @@ const GPT3Tokenizer = require('gpt3-tokenizer').default;
 
 // Default config settings to use
 const defaultConfig = {
-	"model": "gpt-3.5-turbo-0301",
+	"model": "gpt-3.5-turbo",
 	"temperature": 0,
 
 	"total_tokens": 4050,
