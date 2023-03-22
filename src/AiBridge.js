@@ -88,7 +88,11 @@ class AiBridge {
 		opt.prompt = prompt;
 
 		// Parse the prompt, and compute its token count
-		opt = normalizeCompletionOptObject(prompt, opt);
+		let promptTokenObj = tokenizer.encode( prompt );
+		let promptTokenCount = promptTokenObj.bpe.length;
+		
+		// Parse the prompt, and compute its token count
+		opt = normalizeCompletionOptObject(opt, promptTokenCount);
 
 		// Generate the temp key, in accordence to the tempreture setting
 		if( tempKey < 0 ) {
@@ -111,7 +115,7 @@ class AiBridge {
 			return {
 				completion: cacheRes,
 				token: {
-					prompt: promptTokenObj.bpe.length,
+					prompt: promptTokenCount,
 					completion: (tokenizer.encode( cacheRes )).bpe.length,
 					cache: true
 				}
@@ -181,7 +185,11 @@ class AiBridge {
 		let prompt = jsonStringify(messages);
 
 		// Parse the prompt, and compute its token count
-		opt = normalizeCompletionOptObject(prompt, opt);
+		let promptTokenObj = tokenizer.encode( prompt );
+		let promptTokenCount = promptTokenObj.bpe.length;
+
+		// Parse the prompt, and compute its token count
+		opt = normalizeCompletionOptObject(opt, promptTokenCount, messages);
 
 		// Generate the temp key, in accordence to the tempreture setting
 		if( tempKey < 0 ) {
@@ -230,7 +238,7 @@ class AiBridge {
 		return {
 			completion: completionRes,
 			token: {
-				prompt: promptTokenObj.bpe.length,
+				prompt: promptTokenCount,
 				completion: (tokenizer.encode( completionRes )).bpe.length,
 				cache: false
 			}
@@ -294,20 +302,18 @@ class AiBridge {
 
 /**
  * Given the prompt and the options, normalize the options
- * @param {String} prompt 
  * @param {Object} opt 
+ * @param {int} promptStr
+ * @param {Array} messagesArr
  */
-function normalizeCompletionOptObject(prompt, opt) {
-	// Parse the prompt, and compute its token count
-	let promptTokenObj = tokenizer.encode( prompt );
-
+function normalizeCompletionOptObject(opt, promptTokenCount, messagesArr) {
 	// Get the model
 	let model = opt.model || "gpt-3.5-turbo";
 
 	// Special handling for gpt-4-e (economical)
 	if( model == "gpt-4e" ) {
 		// Check if the prompt is under 2025 tokens
-		if( promptTokenObj.bpe.length < 2025 ) {
+		if( promptTokenCount < 2025 ) {
 			// if so we use gpt-3.5 turbo instead
 			model = "gpt-3.5-turbo";
 		} else {
@@ -315,6 +321,7 @@ function normalizeCompletionOptObject(prompt, opt) {
 			model = "gpt-4";
 		}
 	}
+	opt.model = model;
 
 	// Normalize "max_tokens" auto
 	if( opt.max_tokens == "auto" || opt.max_tokens == null ) {
@@ -323,13 +330,22 @@ function normalizeCompletionOptObject(prompt, opt) {
 			autoTotalTokens = 8000;
 		}
 		let totalTokens = opt.total_tokens || autoTotalTokens;
-		let tokenLength = promptTokenObj.bpe.length - (messages.length * 2);
+
+		// Get the estimated token length
+		let tokenLength = promptTokenCount;
+		if( messagesArr != null ) {
+			tokenLength += messagesArr.length * 2;
+		}
+
+		// Set the max_tokens
 		opt.max_tokens = totalTokens - tokenLength
 		if( opt.max_tokens <= 50 ) {
 			throw `Prompt is larger or nearly equal to total token count (${tokenLength}/${totalTokens})`;
 		}
 	}
 
+	// Return updated opt
+	return opt;
 }
 
 // module export
