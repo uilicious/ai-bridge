@@ -6,14 +6,11 @@ const PromiseQueue = require("promise-queue")
 const sleep = require('sleep-promise');
 const jsonStringify = require('fast-json-stable-stringify');
 
-// Initialize the tokenizer
-const GPT3Tokenizer = require('gpt3-tokenizer').default;
-const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
-
 // OpenAI calls
 const getChatCompletion = require("./openai/getChatCompletion");
 const getCompletion = require("./openai/getCompletion");
 const getEmbedding = require("./openai/getEmbedding");
+const getTokenCount = require("./openai/getTokenCount");
 
 /**
  * Setup the AiBridge instance with the provided configuration
@@ -57,7 +54,7 @@ class AiBridge {
 	 * @param {String} prompt 
 	 */
 	async getTokenCount(prompt) {
-		return (tokenizer.encode( prompt )).bpe.length;
+		return getTokenCount(prompt);
 	}
 
 	/**
@@ -84,14 +81,14 @@ class AiBridge {
 		opt.prompt = prompt;
 
 		// Parse the prompt, and compute its token count
-		let promptTokenObj = tokenizer.encode( prompt );
+		let promptTokenCount = getTokenCount( prompt );
 
 		// Normalize "max_tokens" auto
 		if( opt.max_tokens == "auto" || opt.max_tokens == null ) {
 			let totalTokens = opt.total_tokens || 4090;
-			opt.max_tokens = totalTokens - promptTokenObj.bpe.length;
+			opt.max_tokens = totalTokens - promptTokenCount;
 			if( opt.max_tokens <= 50 ) {
-				throw `Prompt is larger or nearly equal to total token count (${promptTokenObj.bpe.length}/${totalTokens})`;
+				throw `Prompt is larger or nearly equal to total token count (${promptTokenCount}/${totalTokens})`;
 			}
 		}
 
@@ -116,8 +113,8 @@ class AiBridge {
 			return {
 				completion: cacheRes,
 				token: {
-					prompt: promptTokenObj.bpe.length,
-					completion: (tokenizer.encode( cacheRes )).bpe.length,
+					prompt: promptTokenCount,
+					completion: getTokenCount(cacheRes),
 					cache: true
 				}
 			};
@@ -142,8 +139,8 @@ class AiBridge {
 		return {
 			completion: completionRes,
 			token: {
-				prompt: promptTokenObj.bpe.length,
-				completion: (tokenizer.encode( completionRes )).bpe.length,
+				prompt: promptTokenCount,
+				completion: getTokenCount(completionRes),
 				cache: false
 			}
 		};
@@ -186,12 +183,12 @@ class AiBridge {
 		let prompt = jsonStringify(messages);
 
 		// Parse the prompt, and compute its token count
-		let promptTokenObj = tokenizer.encode( prompt );
+		let promptTokenCount = getTokenCount( prompt );
 
 		// Normalize "max_tokens" auto
 		if( opt.max_tokens == "auto" || opt.max_tokens == null ) {
 			let totalTokens = opt.total_tokens || 4050;
-			let tokenLength = promptTokenObj.bpe.length - (messages.length * 2);
+			let tokenLength = promptTokenCount - (messages.length * 2);
 			opt.max_tokens = totalTokens - tokenLength
 			if( opt.max_tokens <= 50 ) {
 				throw `Prompt is larger or nearly equal to total token count (${tokenLength}/${totalTokens})`;
@@ -219,8 +216,8 @@ class AiBridge {
 			return {
 				completion: cacheRes,
 				token: {
-					prompt: promptTokenObj.bpe.length,
-					completion: (tokenizer.encode( cacheRes )).bpe.length,
+					prompt: promptTokenCount,
+					completion: getTokenCount(cacheRes),
 					cache: true
 				}
 			};
@@ -245,8 +242,8 @@ class AiBridge {
 		return {
 			completion: completionRes,
 			token: {
-				prompt: promptTokenObj.bpe.length,
-				completion: (tokenizer.encode( completionRes )).bpe.length,
+				prompt: promptTokenCount,
+				completion: getTokenCount(completionRes),
 				cache: false
 			}
 		};
@@ -272,7 +269,7 @@ class AiBridge {
 			return {
 				embedding: cacheRes,
 				token: {
-					embedding: (tokenizer.encode( prompt )).bpe.length,
+					embedding: getTokenCount(prompt),
 					cache: true
 				}
 			};
@@ -297,7 +294,7 @@ class AiBridge {
 		return {
 			embedding: embeddingRes,
 			token: {
-				embedding: (tokenizer.encode( prompt )).bpe.length,
+				embedding: getTokenCount(prompt),
 				cache: false
 			}
 		};
