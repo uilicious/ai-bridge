@@ -15,7 +15,7 @@
   "dependencies": {
     "@js-util/config-object-merge": "=1.0.4",
     "fast-json-stable-stringify": "=2.1.0",
-    "gpt3-tokenizer": "=1.1.4",
+    "gpt3-tokenizer": "=1.1.5",
     "hjson": "=3.2.2",
     "mongodb": "=4.13.0",
     "node-fetch": "=2.6.7",
