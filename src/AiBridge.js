@@ -85,8 +85,7 @@ class AiBridge {
 		opt.prompt = prompt;
 
 		// Parse the prompt, and compute its token count
-		let promptTokenObj = tokenizer.encode( prompt );
-		let promptTokenCount = promptTokenObj.bpe.length;
+		let promptTokenCount = getTokenCount( prompt );
 		
 		// Parse the prompt, and compute its token count
 		opt = normalizeCompletionOptObject(opt, promptTokenCount);
@@ -182,8 +181,7 @@ class AiBridge {
 		let prompt = jsonStringify(messages);
 
 		// Parse the prompt, and compute its token count
-		let promptTokenObj = tokenizer.encode( prompt );
-		let promptTokenCount = promptTokenObj.bpe.length;
+		let promptTokenCount = getTokenCount( prompt );
 
 		// Parse the prompt, and compute its token count
 		opt = normalizeCompletionOptObject(opt, promptTokenCount, messages);
