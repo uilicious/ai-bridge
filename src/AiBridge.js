@@ -89,6 +89,7 @@ class AiBridge {
 		
 		// Parse the prompt, and compute its token count
 		opt = normalizeCompletionOptObject(opt, promptTokenCount);
+		let model = opt.model;
 
 		// Generate the temp key, in accordence to the tempreture setting
 		if( tempKey < 0 ) {
@@ -109,6 +110,7 @@ class AiBridge {
 		if (cacheRes != null) {
 			await streamListener(cacheRes);
 			return {
+				model: model,
 				completion: cacheRes,
 				token: {
 					prompt: promptTokenCount,
@@ -135,6 +137,7 @@ class AiBridge {
 
 		// Return full completion
 		return {
+			model: model,
 			completion: completionRes,
 			token: {
 				prompt: promptTokenCount,
@@ -185,6 +188,7 @@ class AiBridge {
 
 		// Parse the prompt, and compute its token count
 		opt = normalizeCompletionOptObject(opt, promptTokenCount, messages);
+		let model = opt.model;
 
 		// Generate the temp key, in accordence to the tempreture setting
 		if( tempKey < 0 ) {
@@ -205,6 +209,7 @@ class AiBridge {
 		if (cacheRes != null) {
 			await streamListener(cacheRes);
 			return {
+				model: model,
 				completion: cacheRes,
 				token: {
 					prompt: promptTokenCount,
@@ -231,6 +236,7 @@ class AiBridge {
 
 		// Return full completion
 		return {
+			model: model,
 			completion: completionRes,
 			token: {
 				prompt: promptTokenCount,
@@ -253,11 +259,13 @@ class AiBridge {
 		// Merge the options with the default
 		let opt = Object.assign({}, this.config.default.embedding, embeddingOpt);
 		opt.prompt = prompt;
+		let model = opt.model;
 
 		// Get from the cache
 		let cacheRes = await this.layerCache.getCacheEmbedding(prompt, opt, cacheGrp);
 		if (cacheRes) {
 			return {
+				model: model,
 				embedding: cacheRes,
 				token: {
 					embedding: getTokenCount(prompt),
@@ -283,6 +291,7 @@ class AiBridge {
 
 		// And return the result
 		return {
+			model: model,
 			embedding: embeddingRes,
 			token: {
 				embedding: getTokenCount(prompt),
