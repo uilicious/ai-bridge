@@ -4,9 +4,6 @@
  * This does not perform any caching / saving, and can be imported, or executed directly
  **/
 
-// Load dependency modules, and keys
-const GPT3Tokenizer = require('gpt3-tokenizer').default;
-
 // Default config settings to use
 const defaultConfig = {
 	"model": "gpt-3.5-turbo",
@@ -36,9 +33,6 @@ const defaultConfig = {
 	// else return the raw openAI API response
 	"rawApi": false
 };
-
-// Initialize the tokenizer
-const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
 
 /**
  * Given the prompt config, return the API result
@@ -80,10 +74,10 @@ async function getCompletion(
 	// Normalize "max_tokens" auto
 	if( reqJson.max_tokens == "auto" || reqJson.max_tokens == null ) {
 		let totalTokens = inConfig.total_tokens || 4080;
-		let tokenObj = tokenizer.encode( reqJson.prompt );
-		reqJson.max_tokens = totalTokens - tokenObj.bpe.length;
+		let promptTokenCount = getTokenCount( reqJson.prompt );
+		reqJson.max_tokens = totalTokens - promptTokenCount;
 		if( reqJson.max_tokens <= 50 ) {
-			throw `Prompt is larger or nearly equal to total token count (${tokenObj.bpe.length}/${totalTokens})`;
+			throw `Prompt is larger or nearly equal to total token count (${promptTokenCount}/${totalTokens})`;
 		}
 	}
 

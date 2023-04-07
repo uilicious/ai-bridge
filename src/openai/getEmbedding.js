@@ -4,16 +4,10 @@
  * This does not perform any caching / saving, and can be imported, or executed directly
  **/
 
-// Load dependency modules, and keys
-const GPT3Tokenizer = require('gpt3-tokenizer').default;
-
 // Default config settings to use
 const defaultConfig = {
 	"model": "text-embedding-ada-002"
 };
-
-// Initialize the tokenizer
-const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
 
 /**
  * Given the prompt config, return the API result

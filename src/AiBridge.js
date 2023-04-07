@@ -7,14 +7,11 @@ const PromiseQueue = require("promise-queue")
 const sleep = require('sleep-promise');
 const jsonStringify = require('fast-json-stable-stringify');
 
-// Initialize the tokenizer
-const GPT3Tokenizer = require('gpt3-tokenizer').default;
-const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
-
 // OpenAI calls
 const getChatCompletion = require("./openai/getChatCompletion");
 const getCompletion = require("./openai/getCompletion");
 const getEmbedding = require("./openai/getEmbedding");
+const getTokenCount = require("./openai/getTokenCount");
 
 // Implementation
 // ---
@@ -61,7 +58,7 @@ class AiBridge {
 	 * @param {String} prompt 
 	 */
 	async getTokenCount(prompt) {
-		return (tokenizer.encode( prompt )).bpe.length;
+		return getTokenCount(prompt);
 	}
 
 	/**
@@ -88,8 +85,7 @@ class AiBridge {
 		opt.prompt = prompt;
 
 		// Parse the prompt, and compute its token count
-		let promptTokenObj = tokenizer.encode( prompt );
-		let promptTokenCount = promptTokenObj.bpe.length;
+		let promptTokenCount = getTokenCount( prompt );
 		
 		// Parse the prompt, and compute its token count
 		opt = normalizeCompletionOptObject(opt, promptTokenCount);
@@ -116,7 +112,7 @@ class AiBridge {
 				completion: cacheRes,
 				token: {
 					prompt: promptTokenCount,
-					completion: (tokenizer.encode( cacheRes )).bpe.length,
+					completion: getTokenCount(cacheRes),
 					cache: true
 				}
 			};
@@ -141,8 +137,8 @@ class AiBridge {
 		return {
 			completion: completionRes,
 			token: {
-				prompt: promptTokenObj.bpe.length,
-				completion: (tokenizer.encode( completionRes )).bpe.length,
+				prompt: promptTokenCount,
+				completion: getTokenCount(completionRes),
 				cache: false
 			}
 		};
@@ -185,8 +181,7 @@ class AiBridge {
 		let prompt = jsonStringify(messages);
 
 		// Parse the prompt, and compute its token count
-		let promptTokenObj = tokenizer.encode( prompt );
-		let promptTokenCount = promptTokenObj.bpe.length;
+		let promptTokenCount = getTokenCount( prompt );
 
 		// Parse the prompt, and compute its token count
 		opt = normalizeCompletionOptObject(opt, promptTokenCount, messages);
@@ -212,8 +207,8 @@ class AiBridge {
 			return {
 				completion: cacheRes,
 				token: {
-					prompt: promptTokenObj.bpe.length,
-					completion: (tokenizer.encode( cacheRes )).bpe.length,
+					prompt: promptTokenCount,
+					completion: getTokenCount(cacheRes),
 					cache: true
 				}
 			};
@@ -239,7 +234,7 @@ class AiBridge {
 			completion: completionRes,
 			token: {
 				prompt: promptTokenCount,
-				completion: (tokenizer.encode( completionRes )).bpe.length,
+				completion: getTokenCount(completionRes),
 				cache: false
 			}
 		};
@@ -265,7 +260,7 @@ class AiBridge {
 			return {
 				embedding: cacheRes,
 				token: {
-					embedding: (tokenizer.encode( prompt )).bpe.length,
+					embedding: getTokenCount(prompt),
 					cache: true
 				}
 			};
@@ -290,7 +285,7 @@ class AiBridge {
 		return {
 			embedding: embeddingRes,
 			token: {
-				embedding: (tokenizer.encode( prompt )).bpe.length,
+				embedding: getTokenCount(prompt),
 				cache: false
 			}
 		};
