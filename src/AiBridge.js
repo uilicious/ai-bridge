@@ -1,4 +1,5 @@
 // Dependencies
+// ---
 const configObjectMerge = require("@js-util/config-object-merge");
 const LayerCache = require("./cache/LayerCache");
 const defaultConfig = require("./core/defaultConfig");
@@ -11,6 +12,9 @@ const getChatCompletion = require("./openai/getChatCompletion");
 const getCompletion = require("./openai/getCompletion");
 const getEmbedding = require("./openai/getEmbedding");
 const getTokenCount = require("./openai/getTokenCount");
+
+// Implementation
+// ---
 
 /**
  * Setup the AiBridge instance with the provided configuration
@@ -81,16 +85,11 @@ class AiBridge {
 		opt.prompt = prompt;
 
 		// Parse the prompt, and compute its token count
-		let promptTokenCount = getTokenCount( prompt );
-
-		// Normalize "max_tokens" auto
-		if( opt.max_tokens == "auto" || opt.max_tokens == null ) {
-			let totalTokens = opt.total_tokens || 4090;
-			opt.max_tokens = totalTokens - promptTokenCount;
-			if( opt.max_tokens <= 50 ) {
-				throw `Prompt is larger or nearly equal to total token count (${promptTokenCount}/${totalTokens})`;
-			}
-		}
+		let promptTokenObj = tokenizer.encode( prompt );
+		let promptTokenCount = promptTokenObj.bpe.length;
+		
+		// Parse the prompt, and compute its token count
+		opt = normalizeCompletionOptObject(opt, promptTokenCount);
 
 		// Generate the temp key, in accordence to the tempreture setting
 		if( tempKey < 0 ) {
@@ -183,17 +182,11 @@ class AiBridge {
 		let prompt = jsonStringify(messages);
 
 		// Parse the prompt, and compute its token count
-		let promptTokenCount = getTokenCount( prompt );
+		let promptTokenObj = tokenizer.encode( prompt );
+		let promptTokenCount = promptTokenObj.bpe.length;
 
-		// Normalize "max_tokens" auto
-		if( opt.max_tokens == "auto" || opt.max_tokens == null ) {
-			let totalTokens = opt.total_tokens || 4050;
-			let tokenLength = promptTokenCount - (messages.length * 2);
-			opt.max_tokens = totalTokens - tokenLength
-			if( opt.max_tokens <= 50 ) {
-				throw `Prompt is larger or nearly equal to total token count (${tokenLength}/${totalTokens})`;
-			}
-		}
+		// Parse the prompt, and compute its token count
+		opt = normalizeCompletionOptObject(opt, promptTokenCount, messages);
 
 		// Generate the temp key, in accordence to the tempreture setting
 		if( tempKey < 0 ) {
@@ -301,4 +294,57 @@ class AiBridge {
 	}
 }
 
+// Utility functions
+// ---
+
+/**
+ * Given the prompt and the options, normalize the options
+ * @param {Object} opt 
+ * @param {int} promptStr
+ * @param {Array} messagesArr
+ */
+function normalizeCompletionOptObject(opt, promptTokenCount, messagesArr) {
+	// Get the model
+	let model = opt.model || "gpt-3.5-turbo";
+
+	// Special handling for gpt-4-e (economical)
+	if( model == "gpt-4e" ) {
+		// Check if the prompt is under 2025 tokens
+		if( promptTokenCount < 2025 ) {
+			// if so we use gpt-3.5 turbo instead
+			model = "gpt-3.5-turbo";
+		} else {
+			// otherwise we use gpt-4
+			model = "gpt-4";
+		}
+	}
+	opt.model = model;
+
+	// Normalize "max_tokens" auto
+	if( opt.max_tokens == "auto" || opt.max_tokens == null ) {
+		let autoTotalTokens = 4050;
+		if( model.startsWith("gpt-4") ) {
+			autoTotalTokens = 8000;
+		}
+		let totalTokens = opt.total_tokens || autoTotalTokens;
+
+		// Get the estimated token length
+		let tokenLength = promptTokenCount;
+		if( messagesArr != null ) {
+			tokenLength += messagesArr.length * 2;
+		}
+
+		// Set the max_tokens
+		opt.max_tokens = totalTokens - tokenLength
+		if( opt.max_tokens <= 50 ) {
+			throw `Prompt is larger or nearly equal to total token count (${tokenLength}/${totalTokens})`;
+		}
+	}
+
+	// Return updated opt
+	return opt;
+}
+
+// module export
+// ---
 module.exports = AiBridge;
