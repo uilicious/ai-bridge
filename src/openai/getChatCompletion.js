@@ -57,6 +57,13 @@ async function getChatCompletion(
 	if (Array.isArray(inConfig)) {
 		inConfig = { messages: inConfig };
 	}
+
+	// Content value safety check
+	for( const msg of inConfig.messages ) {
+		if( msg.content == null ) {
+			throw `Message content is null: ${JSON.stringify(inConfig.messages)}`;
+		}
+	}
 	
 	// Join it together
 	let reqJson = Object.assign({}, defaultConfig, inConfig);
