@@ -1,4 +1,4 @@
-# ai-cached-connector
+# ai-bridge
 
 Thin wrapper over openAI api, and potentially other AI provider alternatives.
 It helps handle out of the box caching of request.
