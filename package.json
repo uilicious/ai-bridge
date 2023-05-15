@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@gitlab.uilicious-dev.com:ai-labs/ai-bridge.git"
+    "url": "https://github.com/uilicious/ai-bridge"
   },
   "author": "eugene@uilicious.com",
   "license": "Apache-2.0",
