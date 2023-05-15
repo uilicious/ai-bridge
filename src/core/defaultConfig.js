@@ -26,10 +26,10 @@ module.exports = {
 	//----------------------------------------
 	
 	// Number of provider requests that can occur concurrently
-	"providerRateLimit": 1,
+	"providerRateLimit": 10,
 
 	// Latency delay between request, to be used with rate limit, to further "tune down"
-	"providerLatencyAdd": 100,
+	"providerLatencyAdd": 0,
 
 	// Custom model mapping,
 	// This is used to divert operations on a model to model level
