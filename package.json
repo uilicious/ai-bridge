@@ -11,7 +11,7 @@
     "url": "git@gitlab.uilicious-dev.com:ai-labs/ai-bridge.git"
   },
   "author": "eugene@uilicious.com",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "dependencies": {
     "@js-util/config-object-merge": "=1.0.4",
     "fast-json-stable-stringify": "=2.1.0",

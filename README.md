@@ -11,7 +11,10 @@ It also provide some very minor QOL enhancments to the API
 
 ## Provider support
 - openAI
-- (@TODO) forefront (embedding not supported)
+
+## Future provider support?
+- claude ?
+- forefront (embedding not supported)
 
 ## Why should you be caching your AI response?
 
