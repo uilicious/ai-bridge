@@ -129,7 +129,7 @@ async function getCompletion(
 				
 				// Throw error accordingly
 				if( respJson.error ) {
-					console.warn( "getCompletion API error", respJson.error)
+					// console.warn( "getCompletion API error", respJson.error)
 					throw `[${respJson.error.type}] ${respJson.message}`;
 				}
 		
