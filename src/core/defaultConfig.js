@@ -92,14 +92,14 @@ module.exports = {
 			// Default model to use
 			"model": "gpt-3.5-turbo",
 
-			// Total tokens computes the max_tokens
-			// using the current prompt.
-			//
-			// This setting is ignored if max_tokens is set
-			"total_tokens": 4080,
+			// // Total tokens computes the max_tokens
+			// // using the current prompt.
+			// //
+			// // This setting is ignored if max_tokens is set
+			// "total_tokens": 4080,
 
-			// Maximum token to use for generation
-			"max_tokens": null,
+			// // Maximum token to use for generation
+			// "max_tokens": null,
 
 			// // Default prompt and stop token
 			// "prompt": "<|endoftext|>",
@@ -160,8 +160,8 @@ module.exports = {
 			"model": "gpt-3.5-turbo",
 			"temperature": 0,
 		
-			"total_tokens": 4050,
-			"max_tokens": null,
+			// "total_tokens": 4050,
+			// "max_tokens": null,
 		
 			"top_p": 1,
 			"frequency_penalty": 0,
