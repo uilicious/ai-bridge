@@ -6,38 +6,33 @@
 
 // Default config settings to use
 const defaultConfig = {
-	"model": "gpt-3.5-turbo",
+	"model": "claude-v1-100k",
 	"temperature": 0,
 
-	"total_tokens": 4080,
+	// Slightly less then 100k, to handle descrepencies
+	// between claude, and anthropic api
+	"total_tokens": 90 * 1000,
 	"max_tokens": null,
 
-	"top_p": 1,
-	"frequency_penalty": 0,
-	"presence_penalty": 0,
-
-	// NOTE this is not supported in gpt-3.5-turbo onwards
-	// "best_of": 1,
+	// Default value
+	"top_p": -1,
 
 	// Important note!: we split the endoftext token very
 	// intentionally,to avoid causing issues when this file is parsed
 	// by GPT-3 based AI.
 
-	// // Default stop keyword
-	// "stop": ["<|"+"endoftext"+"|>"],
-
-	// // Default prompt
-	// "prompt": "<|"+"endoftext"+"|>",
+	// Default stop keyword
+	"stop": ["<|"+"endoftext"+"|>", "\n\nHuman:"],
 
 	// Return as a string if false, 
-	// else return the raw openAI API response
+	// else return the raw anthropic API response
 	"rawApi": false
 };
 
 /**
  * Given the prompt config, return the API result
  * 
- * @param {String} openai_key, apikey for the request
+ * @param {String} anthropic_key, apikey for the request
  * @param {String | Object} inConfig, containing the prompt or other properties
  * @param {Function} streamListener, for handling streaming requests
  * @param {String} completionURL to use
@@ -45,10 +40,9 @@ const defaultConfig = {
  * @return {Sring | Object} completion string, if rawApi == false (default), else return the raw API JSON response
  */
 async function getCompletion(
-	openai_key, inConfig, 
+	anthropic_key, inConfig, 
 	streamListener = null, 
-	completionURL = 'https://api.openai.com/v1/completions', 
-	chatCompletionURL = 'https://api.openai.com/v1/chat/completions'
+	completionURL = 'https://api.anthropic.com/v1/completions'
 ) {
 	// Normalzied string prompt to object
 	if (typeof inConfig === 'string' || inConfig instanceof String) {
@@ -73,7 +67,7 @@ async function getCompletion(
 
 	// Normalize "max_tokens" auto
 	if( reqJson.max_tokens == "auto" || reqJson.max_tokens == null ) {
-		let totalTokens = inConfig.total_tokens || 4080;
+		let totalTokens = inConfig.total_tokens || 90 * 1000;
 		let promptTokenCount = getTokenCount( reqJson.prompt );
 		reqJson.max_tokens = totalTokens - promptTokenCount;
 		if( reqJson.max_tokens <= 50 ) {
@@ -81,7 +75,7 @@ async function getCompletion(
 		}
 	}
 
-	// Clean out null values, as openAI does not like it (even if it is by default?)
+	// Clean out null values, as anthropic does not like it (even if it is by default?)
 	for( const key of Object.keys(reqJson) ) {
 		if( reqJson[key] === null ) {
 			delete reqJson[key];
@@ -90,20 +84,6 @@ async function getCompletion(
 	// Clean out unhandled props
 	delete reqJson.total_tokens;
 	delete reqJson.completionType;
-
-	// Remap the prompt to messages format for "chat" completion endpoint
-	let targetURL = completionURL;
-	if( inConfig.model.startsWith("gpt-3.5-turbo") ) {
-		targetURL = chatCompletionURL;
-
-		// Use the config messages if provided, else use the prompt
-		reqJson.messages = inConfig.messages || [ 
-			{ "role":"user", "content": reqJson.prompt }
-		];
-
-		// Delete the original prompt
-		delete reqJson.prompt;
-	}
 
 	// The return data to use
 	let respJson = null;
@@ -122,7 +102,7 @@ async function getCompletion(
 					body: JSON.stringify(reqJson),
 					headers: {
 						'Content-Type': 'application/json',
-						"Authorization": `Bearer ${openai_key}`
+						"x-api-key": `${anthropic_key}`
 					}
 				});
 				respJson = await resp.json();
@@ -134,33 +114,15 @@ async function getCompletion(
 				}
 		
 				// Check for response
-				if( respJson.choices && respJson.choices[0] ) {
+				if( respJson.completion ) {
 
-					// Handle the "chat" completion endpoint
-					if( respJson.choices[0].message && respJson.choices[0].message.content ) {
-						// Return the JSON as it is
-						if( useRawApi ) {
-							return respJson;
-						}
-			
-						// Return the completion in simple mode
-						let finalStr = respJson.choices[0].message.content;
-						await streamListener(finalStr)
-						return finalStr;
+					// Return as it is
+					if( useRawApi ) {
+						return respJson;
 					}
 
-					// Handle the legacy "completion" endpoint
-					if( respJson.choices[0].text ) {
-						// Return the JSON as it is
-						if( useRawApi ) {
-							return respJson;
-						}
-			
-						// Return the completion in simple mode
-						let finalStr = respJson.choices[0].text;
-						await streamListener(finalStr)
-						return finalStr;
-					}
+					// Return the completion
+					return respJson.completion;
 				}
 
 				return null;
@@ -179,7 +141,7 @@ async function getCompletion(
 			body: JSON.stringify(reqJson),
 			headers: {
 				'Content-Type': 'application/json',
-				"Authorization": `Bearer ${openai_key}`
+				"x-api-key": `${anthropic_key}`
 			}
 		});
 
@@ -194,7 +156,11 @@ async function getCompletion(
 
 			// Raw buffer, and the parsed result
 			let rawBuffer = "";
-			let parsedRes = "";
+
+			// Last completion streamed
+			// because anthropic sends completion in its entirety
+			// we need to manually compute the delta for the event
+			let lastCompletion = "";
 
 			// Text encoder to use
 			const decoder = new TextDecoder();
@@ -242,20 +208,18 @@ async function getCompletion(
 						const dataJson = dataEvent.slice(6).trim();
 						const dataObj = JSON.parse( dataJson );
 
-						// Get the token (delta is for chatGPT, text is for completion API)
-						let strToken = "";
-						if( dataObj.choices && dataObj.choices[0] ) {
-							strToken = dataObj.choices[0]?.delta?.content || dataObj.choices[0]?.text  || "";
+						// Get the completion
+						if( dataObj.completion ) {
+							// Get the delta completion
+							const deltaCompletion = dataObj.completion.slice(lastCompletion.length);
+							lastCompletion = dataObj.completion;
+
+							// Stream the event
+							await streamListener(deltaCompletion, lastCompletion);
+
+							// Continue
+							continue;
 						}
-						
-						// Add it to the parsedRes
-						if( strToken ) {
-							parsedRes += strToken;
-	
-							// Stream the token back as an event
-							await streamListener(strToken, parsedRes);
-						}
-						continue;
 					}
 					
 					// Throw unexpected dataEvent format
@@ -277,7 +241,7 @@ async function getCompletion(
 			}
 
 			// Return the full string
-			return parsedRes;
+			return lastCompletion;
 		} catch (e) {
 			console.warn("Unexpected event processing error", e)
 			throw "Unexpected event processing error, see warning logs for more details";
@@ -302,7 +266,7 @@ async function getCompletion(
 			JSON.stringify(respJson)
 		].join("\n"));
 	}
-	throw Error("Missing valid openai response, please check warn logs for more details")
+	throw Error("Missing valid anthropic response, please check warn logs for more details")
 }
 
 // Export the module

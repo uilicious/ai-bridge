@@ -131,7 +131,7 @@ async function getChatCompletion(
 						}
 			
 						// Return the completion in simple mode
-						let finalStr = respJson.choices[0].message.content.trim();
+						let finalStr = respJson.choices[0].message.content;
 						await streamListener(finalStr)
 						return finalStr;
 					}
@@ -144,7 +144,7 @@ async function getChatCompletion(
 						}
 			
 						// Return the completion in simple mode
-						let finalStr = respJson.choices[0].text.trim();
+						let finalStr = respJson.choices[0].text;
 						await streamListener(finalStr)
 						return finalStr;
 					}
