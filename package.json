@@ -1,6 +1,6 @@
 {
   "name": "ai-bridge",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "AI connector library, which helps simplify API usage, and provide out of the box caching.",
   "main": "src/AiBridge",
   "scripts": {
