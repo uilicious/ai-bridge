@@ -201,13 +201,18 @@ async function getCompletion(
 				// Postion tracker
 				let doubleNL_pos = -1;
 
-				// Check for double new line, which is the dataEvent terminator
-				while( (doubleNL_pos = rawBuffer.indexOf("\n\n")) > 0 || done ) {
+				// Check for new line, which is the dataEvent terminator
+				while( (doubleNL_pos = rawBuffer.indexOf("\n")) > 0 ) {
 					// Get the dataEvent
 					const dataEvent = rawBuffer.slice(0, doubleNL_pos).trim();
 
 					// Remove dataEvent and double new line from raw buffer
-					rawBuffer = rawBuffer.slice(doubleNL_pos+2);
+					rawBuffer = rawBuffer.slice(doubleNL_pos+1);
+
+					// Skip empty dataEvent
+					if(dataEvent.length == 0) {
+						continue;
+					}
 
 					// Forward any errors
 					if(dataEvent.startsWith("error:")) {
