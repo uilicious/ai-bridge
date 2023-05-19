@@ -61,7 +61,7 @@ async function getChatCompletion(
 	// Loop through each message
 	for( messageObj of messages ) {
 		if( messages.role == "system" ) {
-			fullPromptStr += "System: " + messageObj.content + "\n\n";
+			fullPromptStr += "Human: " + messageObj.content + "\n\n";
 		}
 		if( messages.role == "user" || messages.role == "human" ) {
 			fullPromptStr += "Human: " + messageObj.content + "\n\n";

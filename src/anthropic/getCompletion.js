@@ -202,7 +202,7 @@ async function getCompletion(
 				let doubleNL_pos = -1;
 
 				// Check for double new line, which is the dataEvent terminator
-				while( (doubleNL_pos = rawBuffer.indexOf("\n\n")) > 0 ) {
+				while( (doubleNL_pos = rawBuffer.indexOf("\n\n")) > 0 || done ) {
 					// Get the dataEvent
 					const dataEvent = rawBuffer.slice(0, doubleNL_pos).trim();
 
@@ -216,7 +216,7 @@ async function getCompletion(
 
 					// Does nothing for "[DONE]" dataEvent,
 					if(dataEvent.startsWith("data: [DONE]")) {
-						continue;
+						break;
 					}
 
 					// Lets process the dataEvent data object
@@ -224,6 +224,11 @@ async function getCompletion(
 						// Process the json data
 						const dataJson = dataEvent.slice(6).trim();
 						const dataObj = JSON.parse( dataJson );
+
+						// Handle exception
+						if( dataObj.exception ) {
+							throw dataObj.exception;
+						}
 
 						// Get the completion
 						if( dataObj.completion ) {
@@ -245,7 +250,7 @@ async function getCompletion(
 				}
 
 				// Break on completion
-				if( value == null || done ) {
+				if( done ) {
 					break;
 				}
 			}
@@ -253,7 +258,7 @@ async function getCompletion(
 			// Unexpected end of stream error
 			let trimRawBuffer = rawBuffer.trim();
 			if(trimRawBuffer.length > 0 ) {
-				console.warn("Unexpected end of stream, with unprocessed data", trimRawBuffer)
+				console.warn("Unexpected end of stream, with unprocessed data -", trimRawBuffer)
 				throw "Unexpected end of stream, with unprocessed data, see warning logs for more details";
 			}
 
