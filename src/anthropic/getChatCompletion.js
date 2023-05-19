@@ -60,13 +60,13 @@ async function getChatCompletion(
 
 	// Loop through each message
 	for( messageObj of messages ) {
-		if( messages.role == "system" ) {
+		if( messageObj.role == "system" ) {
 			fullPromptStr += "Human: " + messageObj.content + "\n\n";
 		}
-		if( messages.role == "user" || messages.role == "human" ) {
+		if( messageObj.role == "user" || messages.role == "human" ) {
 			fullPromptStr += "Human: " + messageObj.content + "\n\n";
 		}
-		if( messages.role == "assistant" ) {
+		if( messageObj.role == "assistant" ) {
 			fullPromptStr += "Assistant: " + messageObj.content + "\n\n";
 		}
 	}
