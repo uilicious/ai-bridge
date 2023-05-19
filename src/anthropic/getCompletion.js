@@ -22,7 +22,7 @@ const defaultConfig = {
 	// by GPT-3 based AI.
 
 	// Default stop keyword
-	"stop": ["<|"+"endoftext"+"|>", "\n\nHuman:"],
+	"stop": ["<|"+"endoftext"+"|>", "\n\nHuman:", "\n\nhuman:"],
 
 	// Return as a string if false, 
 	// else return the raw anthropic API response

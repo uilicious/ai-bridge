@@ -8,13 +8,14 @@ const sleep = require('sleep-promise');
 const jsonStringify = require('fast-json-stable-stringify');
 
 // OpenAI calls
-const getChatCompletion = require("./openai/getChatCompletion");
+const openai_getChatCompletion = require("./openai/getChatCompletion");
 const openai_getCompletion = require("./openai/getCompletion");
 const getEmbedding = require("./openai/getEmbedding");
 const getTokenCount = require("./openai/getTokenCount");
 
 // Anthropic calls
 const anthropic_getCompletion = require("./anthropic/getCompletion");
+const anthropic_getChatCompletion = require("./anthropic/getChatCompletion");
 
 // Implementation
 // ---
@@ -136,7 +137,7 @@ class AiBridge {
 			};
 		}
 		
-		// Fallback, get from the openAI API, without caching
+		// Fallback, get from the API, without caching
 		let completionRes = await this._pQueue.add(async function() {
 			let ret = null
 			if( model.startsWith("claude-") ) {
@@ -239,11 +240,15 @@ class AiBridge {
 			};
 		}
 		
-		// Fallback, get from the openAI API, without caching
-		let openai_key = this._openai_key;
+		// Fallback, get from the API, without caching
 		let completionRes = await this._pQueue.add(async function() {
-			let ret = await getChatCompletion(openai_key, opt, streamListener);
-
+			let ret = null
+			if( model.startsWith("claude-") ) {
+				ret = await anthropic_getChatCompletion(self._anthropic_key, opt, streamListener);
+			} else {
+				ret = await openai_getChatCompletion(self._openai_key, opt, streamListener);
+			}
+	
 			// Thorttling controls
 			if(self.config.providerLatencyAdd > 0) {
 				await sleep(self.config.providerLatencyAdd);

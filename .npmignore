@@ -1,9 +1,13 @@
 # Common hidden file stuff
 .*
 
-# Config files for testing
+# Node modules
+node_modules
+
+# Testing config
 config.json
 config.jsonc
 
-# Node modules
-node_modules
+# Things we need to track
+!.git*
+!.npmignore
