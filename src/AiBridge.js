@@ -9,9 +9,12 @@ const jsonStringify = require('fast-json-stable-stringify');
 
 // OpenAI calls
 const getChatCompletion = require("./openai/getChatCompletion");
-const getCompletion = require("./openai/getCompletion");
+const openai_getCompletion = require("./openai/getCompletion");
 const getEmbedding = require("./openai/getEmbedding");
 const getTokenCount = require("./openai/getTokenCount");
+
+// Anthropic calls
+const anthropic_getCompletion = require("./anthropic/getCompletion");
 
 // Implementation
 // ---
@@ -34,8 +37,21 @@ class AiBridge {
 
 		// Get the openai key 
 		this._openai_key = this.config.provider.openai;
+
+		// Get the anthropic key
+		this._anthropic_key = this.config.provider.anthropic;
+
+		// Null out empty strings
+		if( this._anthropic_key == null || this._anthropic_key == "" ) {
+			this._anthropic_key = null;
+		}
 		if( this._openai_key == null || this._openai_key == "" ) {
-			throw "Missing valid openai key"
+			this._openai_key = null;
+		}
+
+		// Throw on missing keys
+		if( this._anthropic_key == null && this._openai_key == null ) {
+			throw "No provider keys provided";
 		}
 
 		// Setup the promise queue
@@ -121,10 +137,14 @@ class AiBridge {
 		}
 		
 		// Fallback, get from the openAI API, without caching
-		let openai_key = this._openai_key;
 		let completionRes = await this._pQueue.add(async function() {
-			let ret = await getCompletion(openai_key, opt, streamListener);
-
+			let ret = null
+			if( model.startsWith("claude-") ) {
+				ret = await anthropic_getCompletion(self._anthropic_key, opt, streamListener);
+			} else {
+				ret = await openai_getCompletion(self._openai_key, opt, streamListener);
+			}
+	
 			// Thorttling controls
 			if(self.config.providerLatencyAdd > 0) {
 				await sleep(self.config.providerLatencyAdd);
@@ -312,9 +332,18 @@ class AiBridge {
  */
 function normalizeCompletionOptObject(opt, promptTokenCount, messagesArr) {
 	// Get the model
-	let model = opt.model || "gpt-3.5-turbo";
+	let model = opt.model;
 
-	// Special handling for gpt-4-e (economical)
+	// Default the model according to keys provided
+	if( model == null || model == "" ) {
+		if( this._anthropic_key ) {
+			model = "claude-v1-100k";
+		} else {
+			model = "gpt-3.5-turbo";
+		}
+	}
+
+	// Special handling for gpt-4e (economical)
 	if( model == "gpt-4e" ) {
 		// Check if the prompt is under 2025 tokens
 		if( promptTokenCount < 2025 ) {
@@ -332,6 +361,8 @@ function normalizeCompletionOptObject(opt, promptTokenCount, messagesArr) {
 		let autoTotalTokens = 4050;
 		if( model.startsWith("gpt-4") ) {
 			autoTotalTokens = 8000;
+		} else if( model.startsWith("claude") && model.endsWith("100k") ) {
+			autoTotalTokens = 90000; // 100k - 10k to account for some token miscounts
 		}
 		let totalTokens = opt.total_tokens || autoTotalTokens;
 

@@ -291,6 +291,8 @@ async function getCompletion(
 		console.warn([
 			"## Unable to handle prompt for ...",
 			JSON.stringify(reqJson),
+			"## Recieved response ...",
+			JSON.stringify(respJson),
 			"## Recieved error ...",
 			respErr
 		].join("\n"));

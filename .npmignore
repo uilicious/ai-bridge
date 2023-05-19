@@ -1,5 +1,9 @@
 # Common hidden file stuff
 .*
 
+# Config files for testing
+config.json
+config.jsonc
+
 # Node modules
 node_modules

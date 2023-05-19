@@ -10,41 +10,41 @@
 		// For openAI, all you will need is the apikey
 		"openai": "your-apikey",
 
-		// For forefront.ai, you will need to provide both an API key
-		// and a URL mapping for each model
-		// @TODO : NOT SUPPORTED YET
-		"forefront.ai": {
-			"apikey": "your-apikey",
-			"models": {
-				"custom-forefront-model-name": "https://shared-api.forefront.link/organization/<some-id>/<model-name>/completions/<some-id>"
-			}
-		},
+		// // For forefront.ai, you will need to provide both an API key
+		// // and a URL mapping for each model
+		// // @TODO : NOT SUPPORTED YET
+		// "forefront.ai": {
+		// 	"apikey": "your-apikey",
+		// 	"models": {
+		// 		"custom-forefront-model-name": "https://shared-api.forefront.link/organization/<some-id>/<model-name>/completions/<some-id>"
+		// 	}
+		// },
 
 		// Custom openai drop in API provider
 		// @TODO : NOT SUPPORTED YET
 		"customAPI": { "type":"openai", "url":"https://api.openai.com/v1/", "apikey":"your-apikey" }
 	},
 
-	//
-	// @TODO : NOT SUPPORTED YET
-	//
-	// Custom model mapping,
-	// This is used to divert operations on a model to model level
-	//
-	// If not configured, by default it will use the openai implementation 
-	// (if apikey is set)
-	//
-	// This is useful for model aliasing, and swapping out at a config level.
-	//----------------------------------------
+	// //
+	// // @TODO : NOT SUPPORTED YET
+	// //
+	// // Custom model mapping,
+	// // This is used to divert operations on a model to model level
+	// //
+	// // If not configured, by default it will use the openai implementation 
+	// // (if apikey is set)
+	// //
+	// // This is useful for model aliasing, and swapping out at a config level.
+	// //----------------------------------------
 
-	"modelmap" : {
-		"model-name-requested": {
-			"provider": "openai", // default
-			"name": "model-name-to-use", // name to use instead, uses the same name if not set
-			// You can enable/disable caching settings on a model by model level
-			"cache": true
-		}
-	},
+	// "modelmap" : {
+	// 	"model-name-requested": {
+	// 		"provider": "openai", // default
+	// 		"name": "model-name-to-use", // name to use instead, uses the same name if not set
+	// 		// You can enable/disable caching settings on a model by model level
+	// 		"cache": true
+	// 	}
+	// },
 
 	// Concurrent provider access
 	// use to reate limit API request
@@ -56,7 +56,7 @@
 	"providerRateLimit": 1,
 
 	// Latency delay between request, to be used with rate limit, to further "tune down"
-	"providerLatencyAdd": 100,
+	"providerLatencyAdd": 0,
 
 	// Caching controls
 	//----------------------------------------
@@ -104,94 +104,94 @@
 	"default": {
 
 		"completion": {
-			// Default model to use
-			"model": "gpt-3.5-turbo",
+			// // Default model to use
+			// "model": "gpt-3.5-turbo",
 
-			// Total tokens computes the max_tokens
-			// using the current prompt.
-			//
-			// This setting is ignored if max_tokens is set
-			"total_tokens": 4080,
+			// // Total tokens computes the max_tokens
+			// // using the current prompt.
+			// //
+			// // This setting is ignored if max_tokens is set
+			// "total_tokens": 4080,
 
-			// Maximum token to use for generation
-			"max_tokens": null,
+			// // Maximum token to use for generation
+			// "max_tokens": null,
 
-			// // Default prompt and stop token
-			// "prompt": "<|endoftext|>",
-			// "stop": "<|endoftext|>",
+			// // // Default prompt and stop token
+			// // "prompt": "<|endoftext|>",
+			// // "stop": "<|endoftext|>",
 
-			// Default temperature to use, we set to 0
-			// by default, as this makes all prompts highly cachable.
-			//
-			// range from 0-1
-			"temperature": 0,
-
-			// // Nucleaus sampling (see docs for more details)
+			// // Default temperature to use, we set to 0
+			// // by default, as this makes all prompts highly cachable.
 			// //
 			// // range from 0-1
-			// "top_p": 1,
+			// "temperature": 0,
 
-			// // Number of completion to create
-			// // generally recommended to do multiple calls instead
-			// "n": 1,
+			// // // Nucleaus sampling (see docs for more details)
+			// // //
+			// // // range from 0-1
+			// // "top_p": 1,
 
-			// Enable / Disable streaming, callback function should be
-			// set if stream is enabled
-			"stream": false,
+			// // // Number of completion to create
+			// // // generally recommended to do multiple calls instead
+			// // "n": 1,
 
-			// Presence and frequency penalties, refer to docs for more details
-			"presence_penalty": 0,
-			"frequency_penalty": 0,
+			// // Enable / Disable streaming, callback function should be
+			// // set if stream is enabled
+			// "stream": false,
 
-			// // When use with N, decide the number possible answer to evaluate from
-			// // IMHO, highly not recommended to be used. 
-			// // As its unclear/unpredictable on how one sample is chosen over another.
-			// "best_of":1,
+			// // Presence and frequency penalties, refer to docs for more details
+			// "presence_penalty": 0,
+			// "frequency_penalty": 0,
 
-			// Proabability modification for individual tokens
-			// avoid using, unless you really know what your doing
-			"logit_bias": null,
+			// // // When use with N, decide the number possible answer to evaluate from
+			// // // IMHO, highly not recommended to be used. 
+			// // // As its unclear/unpredictable on how one sample is chosen over another.
+			// // "best_of":1,
 
-			// String to append at the end of response
-			// just dun use this, and do the appending directly
-			"suffix": null,
+			// // Proabability modification for individual tokens
+			// // avoid using, unless you really know what your doing
+			// "logit_bias": null,
 
-			// This is ignored on cache reads, but is sent on prompt request
-			"user": null,
+			// // String to append at the end of response
+			// // just dun use this, and do the appending directly
+			// "suffix": null,
 
-			// This setting is ignored, as we do not cache the log probabilities
-			"logprobs": null
+			// // This is ignored on cache reads, but is sent on prompt request
+			// "user": null,
+
+			// // This setting is ignored, as we do not cache the log probabilities
+			// "logprobs": null
 		},
 
 		"embedding": {
-			// Default model to use
-			"model": "text-embedding-ada-002",
+			// // Default model to use
+			// "model": "text-embedding-ada-002",
 
-			// This is ignored on cache reads, but is sent on prompt request
-			"user": null
+			// // This is ignored on cache reads, but is sent on prompt request
+			// "user": null
 		},
 
 		"chat": {
-			"model": "gpt-3.5-turbo",
-			"temperature": 0,
+			// "model": "gpt-3.5-turbo",
+			// "temperature": 0,
 		
-			"total_tokens": 4050,
-			"max_tokens": null,
+			// "total_tokens": 4050,
+			// "max_tokens": null,
 		
-			"top_p": 1,
-			"frequency_penalty": 0,
-			"presence_penalty": 0,
+			// "top_p": 1,
+			// "frequency_penalty": 0,
+			// "presence_penalty": 0,
 		
-			// Important note!: we split the endoftext token very
-			// intentionally,to avoid causing issues when this file is parsed
-			// by GPT-3 based AI.
+			// // Important note!: we split the endoftext token very
+			// // intentionally,to avoid causing issues when this file is parsed
+			// // by GPT-3 based AI.
 		
-			// // Default stop keyword
-			// "stop": ["<|"+"endoftext"+"|>"],
+			// // // Default stop keyword
+			// // "stop": ["<|"+"endoftext"+"|>"],
 		
-			// Return as a string if false, 
-			// else return the raw openAI API response
-			"rawApi": false
+			// // Return as a string if false, 
+			// // else return the raw openAI API response
+			// "rawApi": false
 		}
 	}
 }

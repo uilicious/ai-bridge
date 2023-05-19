@@ -14,8 +14,8 @@ const defaultConfig = {
 	"total_tokens": 90 * 1000,
 	"max_tokens": null,
 
-	// Default value
-	"top_p": -1,
+	// // Default value
+	// "top_p": -1,
 
 	// Important note!: we split the endoftext token very
 	// intentionally,to avoid causing issues when this file is parsed
@@ -42,7 +42,7 @@ const defaultConfig = {
 async function getCompletion(
 	anthropic_key, inConfig, 
 	streamListener = null, 
-	completionURL = 'https://api.anthropic.com/v1/completions'
+	completionURL = 'https://api.anthropic.com/v1/complete'
 ) {
 	// Normalzied string prompt to object
 	if (typeof inConfig === 'string' || inConfig instanceof String) {
@@ -51,6 +51,11 @@ async function getCompletion(
 	// Safety
 	if( streamListener == null ) {
 		streamListener = () => {};
+	}
+
+	// Throw on empty prompt
+	if( inConfig.prompt == null || inConfig.prompt == "" ) {
+		throw "Prompt cannot be empty";
 	}
 
 	// Join it together
@@ -81,9 +86,21 @@ async function getCompletion(
 			delete reqJson[key];
 		}
 	}
+
+	// Anthropic does not support presence/frequence penalty
+	delete reqJson.presence_penalty;
+	delete reqJson.frequency_penalty;
+
 	// Clean out unhandled props
 	delete reqJson.total_tokens;
 	delete reqJson.completionType;
+
+	// Normalize max_tokens to max_tokens_to_sample
+	reqJson.max_tokens_to_sample = reqJson.max_tokens_to_sample || reqJson.max_tokens;
+	delete reqJson.max_tokens;
+	// Normalize stop array to stop_sequence
+	reqJson.stop_sequence = reqJson.stop_sequence || reqJson.stop;
+	delete reqJson.stop;
 
 	// The return data to use
 	let respJson = null;
@@ -97,7 +114,7 @@ async function getCompletion(
 		for(let tries=0; tries < 2; ++tries) {
 			try {
 				// Perform the JSON request
-				const resp = await fetch(targetURL, {
+				const resp = await fetch(completionURL, {
 					method: 'post',
 					body: JSON.stringify(reqJson),
 					headers: {
@@ -136,7 +153,7 @@ async function getCompletion(
 		//----------------------------------
 
 		// Perform the initial streaming request request
-		const resp = await fetch(targetURL, {
+		const resp = await fetch(completionURL, {
 			method: 'post',
 			body: JSON.stringify(reqJson),
 			headers: {
@@ -255,6 +272,8 @@ async function getCompletion(
 		console.warn([
 			"## Unable to handle prompt for ...",
 			JSON.stringify(reqJson),
+			"## Recieved response ...",
+			JSON.stringify(respJson),
 			"## Recieved error ...",
 			respErr
 		].join("\n"));
