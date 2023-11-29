@@ -99,7 +99,8 @@ async function getCompletion(
 	reqJson.max_tokens_to_sample = reqJson.max_tokens_to_sample || reqJson.max_tokens;
 	delete reqJson.max_tokens;
 	// Normalize stop array to stop_sequence
-	reqJson.stop_sequence = reqJson.stop_sequence || reqJson.stop;
+	reqJson.stop_sequences = reqJson.stop_sequences || reqJson.stop_sequence || reqJson.stop;
+	delete reqJson.stop_sequence;
 	delete reqJson.stop;
 
 	// The return data to use
