@@ -6,12 +6,12 @@
 
 // Default config settings to use
 const defaultConfig = {
-	"model": "claude-v1-100k",
+	"model": "claude-2",
 	"temperature": 0,
 
-	// Slightly less then 100k, to handle descrepencies
+	// Slightly less then 200k, to handle descrepencies
 	// between claude, and anthropic api
-	"total_tokens": 90 * 1000,
+	"total_tokens": 190 * 1000,
 	"max_tokens": null,
 
 	// // Default value
@@ -119,7 +119,8 @@ async function getCompletion(
 					body: JSON.stringify(reqJson),
 					headers: {
 						'Content-Type': 'application/json',
-						"x-api-key": `${anthropic_key}`
+						"x-api-key": `${anthropic_key}`,
+						"anthropic-version": "2023-06-01"
 					}
 				});
 				respJson = await resp.json();
@@ -177,7 +178,7 @@ async function getCompletion(
 			// Last completion streamed
 			// because anthropic sends completion in its entirety
 			// we need to manually compute the delta for the event
-			let lastCompletion = "";
+			let fullCompletion = "";
 
 			// Text encoder to use
 			const decoder = new TextDecoder();
@@ -237,21 +238,26 @@ async function getCompletion(
 
 						// Get the completion
 						if( dataObj.completion ) {
-							// Get the delta completion
-							const deltaCompletion = dataObj.completion.slice(lastCompletion.length);
-							lastCompletion = dataObj.completion;
-
 							// Stream the event
-							await streamListener(deltaCompletion, lastCompletion);
+							fullCompletion += dataObj.completion;
+							await streamListener(dataObj.completion, fullCompletion);
 
-							// Continue
-							continue;
+							// // Continue
+							// continue;
+						}
+
+						// Return on stop event
+						// this now replace the data: [DONE] event
+						if( dataObj.stop_reason || dataObj.stop ) {
+							break;
 						}
 					}
 					
-					// Throw unexpected dataEvent format
-					console.warn("Unexpected data event format", dataEvent)
-					throw "Unexpected data event format, see warning logs"
+					// // Data object can now be empty, due to ping event
+					// // ----
+					// // Throw unexpected dataEvent format
+					// console.warn("Unexpected data event format", dataEvent)
+					// throw "Unexpected data event format, see warning logs"
 				}
 
 				// Break on completion
@@ -268,7 +274,7 @@ async function getCompletion(
 			}
 
 			// Return the full string
-			return lastCompletion;
+			return fullCompletion;
 		} catch (e) {
 			console.warn("Unexpected event processing error", e)
 			throw "Unexpected event processing error, see warning logs for more details";
