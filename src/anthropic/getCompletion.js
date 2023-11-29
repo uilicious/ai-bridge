@@ -160,7 +160,8 @@ async function getCompletion(
 			body: JSON.stringify(reqJson),
 			headers: {
 				'Content-Type': 'application/json',
-				"x-api-key": `${anthropic_key}`
+				"x-api-key": `${anthropic_key}`,
+				"anthropic-version": "2023-06-01"
 			}
 		});
 
