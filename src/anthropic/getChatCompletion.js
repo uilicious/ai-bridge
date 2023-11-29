@@ -8,7 +8,7 @@ const getCompletion = require("./getCompletion");
 
 // Default config settings to use
 const defaultConfig = {
-	"model": "claude-v1-100k",
+	"model": "claude-2",
 	"temperature": 0,
 
 	// Slightly less then 100k, to handle descrepencies
