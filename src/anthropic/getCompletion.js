@@ -141,7 +141,9 @@ async function getCompletion(
 					}
 
 					// Return the completion
-					return respJson.completion;
+					let finalStr = respJson.completion;
+					await streamListener(finalStr)
+					return finalStr
 				}
 
 				return null;
